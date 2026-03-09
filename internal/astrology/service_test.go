@@ -3,6 +3,7 @@ package astrology
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"testing"
 )
 
@@ -195,8 +196,8 @@ func TestServiceReadingIsExpanded(t *testing.T) {
 		t.Fatalf("GenerateNatalChart returned error: %v", err)
 	}
 
-	if len([]rune(resp.Reading.TextReport)) < 280 {
-		t.Fatalf("expected expanded text report, got %d runes", len([]rune(resp.Reading.TextReport)))
+	if len([]rune(resp.Reading.TextReport)) < 1200 {
+		t.Fatalf("expected long text report, got %d runes", len([]rune(resp.Reading.TextReport)))
 	}
 	if resp.Reading.Growth == "" || resp.Reading.Action == "" {
 		t.Fatalf("expected growth/action sections to be populated")
@@ -206,5 +207,87 @@ func TestServiceReadingIsExpanded(t *testing.T) {
 	}
 	if resp.Reading.Love == "" {
 		t.Fatalf("expected love section to be populated")
+	}
+	if resp.Reading.Family == "" || resp.Reading.Summary == "" {
+		t.Fatalf("expected family/summary sections to be populated")
+	}
+	if len(resp.Reading.Evidence) < 8 {
+		t.Fatalf("expected evidence items >= 8, got %d", len(resp.Reading.Evidence))
+	}
+	if resp.Reading.Quality.CharCount < 1200 {
+		t.Fatalf("expected quality char_count >=1200, got %d", resp.Reading.Quality.CharCount)
+	}
+	if resp.Reading.Quality.ThemeCoverage < 1.0 {
+		t.Fatalf("expected full theme coverage, got %.2f", resp.Reading.Quality.ThemeCoverage)
+	}
+	if resp.Reading.Quality.ConsistencyScore <= 0.5 {
+		t.Fatalf("expected consistency score >0.5, got %.2f", resp.Reading.Quality.ConsistencyScore)
+	}
+}
+
+func TestExtractThemeSignals_CoversPrimaryThemes(t *testing.T) {
+	planets := map[string]PlanetPosition{
+		"Sun":     {Sign: "Aries", House: 10},
+		"Moon":    {Sign: "Cancer", House: 4},
+		"Venus":   {Sign: "Libra", House: 7},
+		"Mars":    {Sign: "Capricorn", House: 2},
+		"Jupiter": {Sign: "Taurus", House: 2},
+		"Saturn":  {Sign: "Virgo", House: 6},
+	}
+	aspects := []Aspect{
+		{BodyA: "Venus", BodyB: "Moon", Type: "square", Orb: 2.1},
+		{BodyA: "Mars", BodyB: "Jupiter", Type: "trine", Orb: 1.6},
+	}
+
+	signals := extractThemeSignals(planets, aspects)
+	themes := []string{"love", "career", "money", "family"}
+	for _, theme := range themes {
+		sig, ok := signals[theme]
+		if !ok {
+			t.Fatalf("expected signal for theme %s", theme)
+		}
+		if sig.Score <= 0 {
+			t.Fatalf("expected positive score for theme %s", theme)
+		}
+		if len(sig.Factors) < 2 {
+			t.Fatalf("expected >=2 factors for theme %s, got %d", theme, len(sig.Factors))
+		}
+	}
+}
+
+func TestAssessReadingQuality_DetectsHighDuplicateRatio(t *testing.T) {
+	repeated := "相同句子。相同句子。相同句子。相同句子。"
+	reading := Reading{
+		Love:        repeated,
+		Career:      repeated,
+		Money:       repeated,
+		Family:      repeated,
+		TextReport:  repeated + repeated + repeated,
+		Summary:     "摘要",
+		Evidence:    []EvidenceItem{{Theme: "love", Claim: "test", Factors: []string{"金星7宫", "月亮4宫"}, Confidence: 0.8}},
+		Quality:     QualityMetrics{},
+		Personality: "人格",
+	}
+
+	quality := assessReadingQuality(reading)
+	if quality.DuplicateRatio < 0.3 {
+		t.Fatalf("expected duplicate ratio >= 0.3, got %.2f", quality.DuplicateRatio)
+	}
+}
+
+func TestBuildEvidenceFromSignal_ClaimNotTruncated(t *testing.T) {
+	claim := "你在爱情关系中会把情感安全与长期成长并重，且会在关系节奏里持续进行协商和复盘，以建立稳定信任。"
+	sig := themeSignal{
+		Theme:   "love",
+		Score:   3.8,
+		Factors: []string{"金星双鱼座第9宫", "月亮巨蟹座第4宫", "火星天秤座第7宫"},
+	}
+
+	item := buildEvidenceFromSignal("love", claim, sig, 0)
+	if item.Claim != claim {
+		t.Fatalf("expected full claim output, got %q", item.Claim)
+	}
+	if strings.Contains(item.Claim, "…") {
+		t.Fatalf("expected claim without truncation ellipsis, got %q", item.Claim)
 	}
 }

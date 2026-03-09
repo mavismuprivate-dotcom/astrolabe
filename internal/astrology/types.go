@@ -81,18 +81,36 @@ type Aspect struct {
 }
 
 type Reading struct {
-	Personality   string `json:"personality"`
-	Relationship  string `json:"relationship"`
-	Love          string `json:"love"`
-	Career        string `json:"career"`
-	Money         string `json:"money"`
-	Growth        string `json:"growth"`
-	Action        string `json:"action"`
-	Focus         string `json:"focus"`
-	Reminder      string `json:"reminder"`
-	Disclaimer    string `json:"disclaimer"`
-	TextReport    string `json:"text_report"`
-	Entertainment string `json:"entertainment"`
+	Personality   string         `json:"personality"`
+	Relationship  string         `json:"relationship"`
+	Love          string         `json:"love"`
+	Career        string         `json:"career"`
+	Money         string         `json:"money"`
+	Family        string         `json:"family"`
+	Summary       string         `json:"summary"`
+	Growth        string         `json:"growth"`
+	Action        string         `json:"action"`
+	Focus         string         `json:"focus"`
+	Evidence      []EvidenceItem `json:"evidence,omitempty"`
+	Quality       QualityMetrics `json:"quality"`
+	Reminder      string         `json:"reminder"`
+	Disclaimer    string         `json:"disclaimer"`
+	TextReport    string         `json:"text_report"`
+	Entertainment string         `json:"entertainment"`
+}
+
+type EvidenceItem struct {
+	Theme      string   `json:"theme"`
+	Claim      string   `json:"claim"`
+	Factors    []string `json:"factors"`
+	Confidence float64  `json:"confidence"`
+}
+
+type QualityMetrics struct {
+	CharCount        int     `json:"char_count"`
+	DuplicateRatio   float64 `json:"duplicate_ratio"`
+	ThemeCoverage    float64 `json:"theme_coverage"`
+	ConsistencyScore float64 `json:"consistency_score"`
 }
 
 type Location struct {

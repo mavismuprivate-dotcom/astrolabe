@@ -149,55 +149,80 @@ func applyDefaults(req *NatalChartRequest) {
 	}
 }
 
+type themeSignal struct {
+	Theme   string
+	Score   float64
+	Factors []string
+}
+
 func buildReading(planets map[string]PlanetPosition, aspects []Aspect, approximate bool) Reading {
 	sun := planets["Sun"]
 	moon := planets["Moon"]
 	venus := planets["Venus"]
 	mars := planets["Mars"]
-	saturn := planets["Saturn"]
 
-	personality := fmt.Sprintf("太阳%s、月亮%s。你的外在决策偏向%s，内在情绪需求偏向%s。太阳宫位第%d宫显示你会把主要精力投入到%s。", signCN(sun.Sign), signCN(moon.Sign), signModeCN(sun.Sign), moonNeedCN(moon.Sign), maxInt(1, sun.House), houseThemeCN(maxInt(1, sun.House)))
-	relationship := fmt.Sprintf("金星在%s，关系表达更重视%s；月亮%s提示你在亲密关系里需要%s。建议把“需求表达”放在“情绪反应”之前。", signCN(venus.Sign), relationKeyword(venus.Sign), signCN(moon.Sign), moonNeedCN(moon.Sign))
-	love := loveOutlook(planets, aspects)
-	career := fmt.Sprintf("火星第%d宫强调行动力应投向%s；土星%s意味着你在%s议题上通过长期主义获胜。职业节奏上，先建立稳定流程，再扩大影响力。", maxInt(1, mars.House), houseThemeCN(maxInt(1, mars.House)), signCN(saturn.Sign), signModeCN(saturn.Sign))
-	money := moneyOutlook(planets)
+	signals := extractThemeSignals(planets, aspects)
+
+	personality := fmt.Sprintf("太阳%s、月亮%s。你的外在决策偏向%s，内在情绪需求偏向%s。太阳位于第%d宫，说明你会持续把精力投入在%s。你对自我成长的驱动并不短促，而是倾向通过目标拆解和行动复盘来稳步提升。", signCN(sun.Sign), signCN(moon.Sign), signModeCN(sun.Sign), moonNeedCN(moon.Sign), maxInt(1, sun.House), houseThemeCN(maxInt(1, sun.House)))
+	relationship := fmt.Sprintf("金星在%s、月亮在%s，关系风格强调%s与%s。你在亲密关系里既重视情绪反馈，也希望保留个人节奏，适合通过“提前约定边界+稳定沟通仪式”来降低误解成本。", signCN(venus.Sign), signCN(moon.Sign), relationKeyword(venus.Sign), moonNeedCN(moon.Sign))
+
+	love := buildThemeNarrative("love", signals["love"], "你在爱情关系中会把“情感安全”和“长期成长”并重考虑。", "风险点在于当情绪波动出现时，容易出现需求表达和实际行动不同步。", "建议固定每周一次关系复盘，用事实和感受分层表达，先确认共识再推进承诺。")
+	career := buildThemeNarrative("career", signals["career"], fmt.Sprintf("职业发展上，你更适合通过%s建立稳定竞争力。", houseThemeCN(maxInt(1, mars.House))), "风险点是阶段性目标过多时容易拉高内耗，执行路径可能被频繁切换。", "建议采用“季度主目标 + 周度交付件”的节奏，并保留复盘窗口来做策略校准。")
+	money := buildThemeNarrative("money", signals["money"], moneyOutlook(planets), "风险点在于收入扩张速度与风险承受能力不匹配时，可能放大现金流波动。", "建议持续执行分层资金管理：基础储备、稳健配置、进取预算三层分离。")
+	family := buildThemeNarrative("family", signals["family"], "家庭与内在安全议题是你的长期底层驱动力。你会在情感连接、责任承担和边界维护之间寻找平衡。", "风险点是过度承担他人情绪劳动，导致个人恢复周期被压缩。", "建议建立“可持续支持”原则：明确可提供帮助范围，避免长期透支。")
+
 	growth := growthFromAspects(aspects)
-	action := fmt.Sprintf("本周行动建议：1) 在%s设一个可量化目标；2) 每天固定 20-30 分钟复盘情绪触发点；3) 每周做一次关键关系沟通清单。", houseThemeCN(maxInt(1, sun.House)))
+	action := fmt.Sprintf("行动建议：1) 在%s设一个可量化目标；2) 每天固定20-30分钟复盘触发情绪；3) 每周一次主题复盘（爱情/事业/金钱/家庭）；4) 每月做一次长期目标与现实资源对表。", houseThemeCN(maxInt(1, sun.House)))
 	focus := aspectHighlights(aspects)
-	reminder := "解读逻辑参考通行占星框架：太阳/Identity、月亮/Emotions、上升/外在风格、宫位/生活领域、相位/能量互动。"
+	summary := buildSummary(love, career, money, family)
+	reminder := "解读依据来自“行星×星座×宫位×相位”规则系统。每条主题结论均附结构化证据，便于复核。"
 	if approximate {
-		career = "当前为近似模式，宫位相关职业结论已降级为方向性建议，建议补充出生时刻后复算。"
-		reminder += " 你当前使用近似出生时刻，宫位与月亮细节请谨慎解读。"
+		reminder += " 当前为近似出生时刻模式，宫位细节和月亮相关结论请保守解读。"
 	}
 
+	evidence := generateThemeEvidence(signals, love, career, money, family)
 	disclaimer := "本结果基于西方占星规则模板生成，仅供娱乐与自我观察参考。"
+
 	textReport := strings.Join([]string{
 		"【人格底色】" + personality,
 		"【关系模式】" + relationship,
 		"【爱情解析】" + love,
 		"【事业路径】" + career,
 		"【金钱主题】" + money,
+		"【家庭主题】" + family,
 		"【成长课题】" + growth,
 		"【行动建议】" + action,
 		"【关键相位】" + focus,
+		"【综合摘要】" + summary,
 		"【提示】" + reminder,
 		disclaimer,
 	}, "\n\n")
 
-	return Reading{
+	reading := Reading{
 		Personality:   personality,
 		Relationship:  relationship,
 		Love:          love,
 		Career:        career,
 		Money:         money,
+		Family:        family,
+		Summary:       summary,
 		Growth:        growth,
 		Action:        action,
 		Focus:         focus,
+		Evidence:      evidence,
 		Reminder:      reminder,
 		Disclaimer:    disclaimer,
 		TextReport:    textReport,
 		Entertainment: "仅供娱乐与参考",
 	}
+	reading.Quality = assessReadingQuality(reading)
+
+	if ok, reasons := passesQualityGate(reading); !ok {
+		reading.Summary = "内容质量门禁未完全通过，已降级为保守版结论。请补全出生时刻并稍后重试。"
+		reading.Reminder += " 质量门禁提示：" + strings.Join(reasons, "；")
+	}
+
+	return reading
 }
 
 func maxInt(a, b int) int {
@@ -376,4 +401,303 @@ func loveOutlook(planets map[string]PlanetPosition, aspects []Aspect) string {
 
 	base += "当前主要爱情相位偏顺畅，适合通过共同目标和日常协作来稳步升温。"
 	return base
+}
+
+func extractThemeSignals(planets map[string]PlanetPosition, aspects []Aspect) map[string]themeSignal {
+	signals := map[string]themeSignal{
+		"love":   {Theme: "love", Score: 1.0, Factors: []string{}},
+		"career": {Theme: "career", Score: 1.0, Factors: []string{}},
+		"money":  {Theme: "money", Score: 1.0, Factors: []string{}},
+		"family": {Theme: "family", Score: 1.0, Factors: []string{}},
+	}
+
+	venus := planets["Venus"]
+	mars := planets["Mars"]
+	moon := planets["Moon"]
+	sun := planets["Sun"]
+	jupiter := planets["Jupiter"]
+	saturn := planets["Saturn"]
+
+	addSignalFactor(signals, "love", 1.2, fmt.Sprintf("金星%s第%d宫", signCN(venus.Sign), maxInt(1, venus.House)))
+	addSignalFactor(signals, "love", 1.0, fmt.Sprintf("月亮%s第%d宫", signCN(moon.Sign), maxInt(1, moon.House)))
+	addSignalFactor(signals, "love", 0.8, fmt.Sprintf("火星%s第%d宫", signCN(mars.Sign), maxInt(1, mars.House)))
+
+	addSignalFactor(signals, "career", 1.3, fmt.Sprintf("太阳第%d宫", maxInt(1, sun.House)))
+	addSignalFactor(signals, "career", 1.2, fmt.Sprintf("火星第%d宫", maxInt(1, mars.House)))
+	addSignalFactor(signals, "career", 1.0, fmt.Sprintf("土星%s", signCN(saturn.Sign)))
+
+	addSignalFactor(signals, "money", 1.3, fmt.Sprintf("木星%s第%d宫", signCN(jupiter.Sign), maxInt(1, jupiter.House)))
+	addSignalFactor(signals, "money", 1.1, fmt.Sprintf("金星第%d宫", maxInt(1, venus.House)))
+	addSignalFactor(signals, "money", 1.0, fmt.Sprintf("第2宫主题=%s", houseThemeCN(2)))
+
+	addSignalFactor(signals, "family", 1.4, fmt.Sprintf("月亮第%d宫", maxInt(1, moon.House)))
+	addSignalFactor(signals, "family", 1.1, fmt.Sprintf("月亮%s", signCN(moon.Sign)))
+	addSignalFactor(signals, "family", 1.0, fmt.Sprintf("第4宫主题=%s", houseThemeCN(4)))
+
+	for _, asp := range aspects {
+		ab := asp.BodyA + "-" + asp.BodyB + " " + aspectCN(asp.Type)
+		switch {
+		case containsAny(asp.BodyA, asp.BodyB, "Venus", "Moon", "Mars"):
+			addSignalFactor(signals, "love", 0.9, "相位:"+ab)
+		case containsAny(asp.BodyA, asp.BodyB, "Sun", "Mars", "Saturn", "MC"):
+			addSignalFactor(signals, "career", 0.9, "相位:"+ab)
+		case containsAny(asp.BodyA, asp.BodyB, "Jupiter", "Venus", "Saturn"):
+			addSignalFactor(signals, "money", 0.9, "相位:"+ab)
+		}
+		if containsAny(asp.BodyA, asp.BodyB, "Moon") {
+			addSignalFactor(signals, "family", 0.8, "相位:"+ab)
+		}
+	}
+
+	for k, s := range signals {
+		s.Factors = dedupStrings(s.Factors)
+		signals[k] = s
+	}
+	return signals
+}
+
+func addSignalFactor(signals map[string]themeSignal, theme string, score float64, factor string) {
+	s := signals[theme]
+	s.Score += score
+	s.Factors = append(s.Factors, factor)
+	signals[theme] = s
+}
+
+func containsAny(a, b string, names ...string) bool {
+	for _, n := range names {
+		if a == n || b == n {
+			return true
+		}
+	}
+	return false
+}
+
+func dedupStrings(in []string) []string {
+	if len(in) == 0 {
+		return in
+	}
+	seen := make(map[string]bool, len(in))
+	out := make([]string, 0, len(in))
+	for _, v := range in {
+		if seen[v] {
+			continue
+		}
+		seen[v] = true
+		out = append(out, v)
+	}
+	return out
+}
+
+func buildThemeNarrative(theme string, signal themeSignal, mainClaim string, risk string, action string) string {
+	factors := signal.Factors
+	if len(factors) > 4 {
+		factors = factors[:4]
+	}
+	anchors := strings.Join(factors, "、")
+	return fmt.Sprintf("%s 该主题的核心信号来自：%s。风险提示：%s 建议动作：%s 在执行层面，建议使用“目标-证据-复盘”闭环：先定义目标，再记录事实证据，最后以周为单位复盘并做微调。", mainClaim, anchors, risk, action)
+}
+
+func buildSummary(love, career, money, family string) string {
+	return fmt.Sprintf("综合来看，你的本命结构呈现“关系与责任并重、目标与稳定并行”的特征。爱情维度强调长期协同，事业维度强调节奏管理，金钱维度强调结构化分配，家庭维度强调边界与支持的平衡。建议把四个主题放在同一成长路径中：以关系稳定支撑事业执行，以财务秩序降低情绪波动，再通过家庭边界维持长期续航。%s%s", shortSnippet(love), shortSnippet(career))
+}
+
+func shortSnippet(v string) string {
+	if len([]rune(v)) <= 46 {
+		return v
+	}
+	r := []rune(v)
+	return string(r[:46]) + "…"
+}
+
+func generateThemeEvidence(signals map[string]themeSignal, love, career, money, family string) []EvidenceItem {
+	themeClaims := map[string]string{
+		"love":   love,
+		"career": career,
+		"money":  money,
+		"family": family,
+	}
+
+	items := make([]EvidenceItem, 0, 12)
+	for _, theme := range []string{"love", "career", "money", "family"} {
+		sig := signals[theme]
+		claim := themeClaims[theme]
+		items = append(items, buildEvidenceFromSignal(theme, claim, sig, 0))
+		items = append(items, buildEvidenceFromSignal(theme, claim, sig, 1))
+	}
+	return items
+}
+
+func buildEvidenceFromSignal(theme, claim string, sig themeSignal, offset int) EvidenceItem {
+	factors := sig.Factors
+	if len(factors) == 0 {
+		factors = []string{"默认规则模板"}
+	}
+	start := offset * 2
+	if start >= len(factors) {
+		start = 0
+	}
+	end := start + 3
+	if end > len(factors) {
+		end = len(factors)
+	}
+	selected := factors[start:end]
+	if len(selected) < 2 && len(factors) >= 2 {
+		selected = factors[:2]
+	}
+	return EvidenceItem{
+		Theme:      theme,
+		Claim:      strings.TrimSpace(claim),
+		Factors:    selected,
+		Confidence: confidenceFromScore(sig.Score),
+	}
+}
+
+func confidenceFromScore(score float64) float64 {
+	c := 0.42 + score*0.045
+	if c > 0.95 {
+		c = 0.95
+	}
+	if c < 0.35 {
+		c = 0.35
+	}
+	return round2(c)
+}
+
+func assessReadingQuality(reading Reading) QualityMetrics {
+	charCount := len([]rune(reading.TextReport))
+	duplicate := calcDuplicateRatio(reading.TextReport)
+	themeCoverage := calcThemeCoverage(reading)
+	consistency := calcConsistencyScore(reading.TextReport, duplicate)
+
+	return QualityMetrics{
+		CharCount:        charCount,
+		DuplicateRatio:   round2(duplicate),
+		ThemeCoverage:    round2(themeCoverage),
+		ConsistencyScore: round2(consistency),
+	}
+}
+
+func calcDuplicateRatio(text string) float64 {
+	sentences := splitSentences(text)
+	if len(sentences) <= 1 {
+		return 0
+	}
+	unique := make(map[string]bool, len(sentences))
+	for _, s := range sentences {
+		n := normalizeSentence(s)
+		if n == "" {
+			continue
+		}
+		unique[n] = true
+	}
+	if len(unique) == 0 {
+		return 1
+	}
+	return 1 - float64(len(unique))/float64(len(sentences))
+}
+
+func splitSentences(text string) []string {
+	s := strings.NewReplacer("！", "。", "？", "。", "；", "。", "!", ".", "?", ".", ";", ".", "\n", "。").Replace(text)
+	parts := strings.Split(s, "。")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
+}
+
+func normalizeSentence(s string) string {
+	s = strings.ToLower(strings.TrimSpace(s))
+	s = strings.NewReplacer(" ", "", "，", "", ",", "", "。", "", ".", "", "：", "", ":", "", "“", "", "”", "").Replace(s)
+	return s
+}
+
+func calcThemeCoverage(reading Reading) float64 {
+	total := 4.0
+	covered := 0.0
+	if strings.TrimSpace(reading.Love) != "" {
+		covered++
+	}
+	if strings.TrimSpace(reading.Career) != "" {
+		covered++
+	}
+	if strings.TrimSpace(reading.Money) != "" {
+		covered++
+	}
+	if strings.TrimSpace(reading.Family) != "" {
+		covered++
+	}
+	return covered / total
+}
+
+func calcConsistencyScore(text string, duplicateRatio float64) float64 {
+	pairs := [][2]string{
+		{"高风险", "低风险"},
+		{"激进", "保守"},
+		{"稳定", "失控"},
+		{"低波动", "高波动"},
+	}
+	hits := 0
+	for _, p := range pairs {
+		if strings.Contains(text, p[0]) && strings.Contains(text, p[1]) {
+			hits++
+		}
+	}
+	score := 1.0 - float64(hits)*0.12 - duplicateRatio*0.35
+	if score < 0 {
+		score = 0
+	}
+	if score > 1 {
+		score = 1
+	}
+	return score
+}
+
+func passesQualityGate(reading Reading) (bool, []string) {
+	reasons := make([]string, 0)
+	if len([]rune(reading.Love)) < 180 {
+		reasons = append(reasons, "爱情主题长度不足")
+	}
+	if len([]rune(reading.Career)) < 180 {
+		reasons = append(reasons, "事业主题长度不足")
+	}
+	if len([]rune(reading.Money)) < 180 {
+		reasons = append(reasons, "金钱主题长度不足")
+	}
+	if len([]rune(reading.Family)) < 180 {
+		reasons = append(reasons, "家庭主题长度不足")
+	}
+	eviCount := map[string]int{}
+	for _, e := range reading.Evidence {
+		eviCount[e.Theme]++
+		if len(e.Factors) < 2 {
+			reasons = append(reasons, "存在依据因素少于2条")
+			break
+		}
+	}
+	for _, theme := range []string{"love", "career", "money", "family"} {
+		if eviCount[theme] < 2 {
+			reasons = append(reasons, fmt.Sprintf("%s主题依据不足2条", theme))
+		}
+	}
+	if reading.Quality.CharCount < 1200 {
+		reasons = append(reasons, "总长度不足")
+	}
+	if reading.Quality.DuplicateRatio > 0.28 {
+		reasons = append(reasons, "重复率过高")
+	}
+	if reading.Quality.ThemeCoverage < 1.0 {
+		reasons = append(reasons, "主题覆盖不足")
+	}
+	if reading.Quality.ConsistencyScore < 0.55 {
+		reasons = append(reasons, "一致性分数偏低")
+	}
+	return len(reasons) == 0, dedupStrings(reasons)
+}
+
+func round2(v float64) float64 {
+	return float64(int(v*100+0.5)) / 100
 }

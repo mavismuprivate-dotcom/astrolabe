@@ -131,4 +131,10 @@ func TestNatalChartProvincePayloadOK(t *testing.T) {
 	if resp.Meta.Input.BirthProvince != "江苏省" {
 		t.Fatalf("expected province 江苏省, got %s", resp.Meta.Input.BirthProvince)
 	}
+	if len(resp.Reading.Evidence) == 0 {
+		t.Fatalf("expected reading evidence to be present")
+	}
+	if resp.Reading.Quality.CharCount == 0 {
+		t.Fatalf("expected reading quality metrics to be present")
+	}
 }

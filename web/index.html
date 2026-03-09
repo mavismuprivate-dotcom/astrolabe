@@ -70,12 +70,74 @@
     }
 
     .panel {
-      background: rgba(45, 45, 45, 0.72);
-      border: 1px solid rgba(105, 180, 255, 0.24);
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      background:
+        linear-gradient(150deg, rgba(105, 180, 255, 0.08), rgba(0, 0, 0, 0) 35%),
+        linear-gradient(180deg, rgba(225, 255, 255, 0.05), rgba(30, 30, 30, 0.72) 38%, rgba(20, 20, 20, 0.78));
+      border: 1px solid rgba(105, 180, 255, 0.18);
       border-radius: 14px;
       padding: 14px;
-      backdrop-filter: blur(7px);
-      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.32);
+      backdrop-filter: blur(14px) saturate(120%);
+      box-shadow:
+        0 22px 60px rgba(0, 0, 0, 0.45),
+        0 0 0 1px rgba(225, 255, 255, 0.04) inset,
+        0 -24px 50px rgba(0, 133, 255, 0.08) inset;
+    }
+
+    .panel::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      background: linear-gradient(180deg, rgba(225, 255, 255, 0.05), rgba(255, 255, 255, 0));
+      opacity: 0.8;
+      z-index: 0;
+    }
+
+    .panel > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .glow-track {
+      --mx: 50%;
+      --my: 50%;
+      transition: border-color .18s ease, box-shadow .2s ease;
+    }
+
+    .glow-track::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: radial-gradient(
+        240px circle at var(--mx) var(--my),
+        rgba(224, 255, 255, 0.11) 0%,
+        rgba(105, 180, 255, 0.07) 22%,
+        rgba(0, 133, 255, 0.04) 38%,
+        rgba(0, 133, 255, 0.00) 62%
+      );
+      opacity: 0;
+      mix-blend-mode: screen;
+      filter: blur(0.5px);
+      transition: opacity .22s ease;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .glow-track.is-hover::before {
+      opacity: 1;
+    }
+
+    .glow-track.is-hover {
+      border-color: rgba(157, 215, 255, 0.22);
+      box-shadow:
+        0 0 0 1px rgba(224, 255, 255, 0.07) inset,
+        0 0 22px rgba(0, 133, 255, 0.09),
+        0 12px 32px rgba(0, 0, 0, 0.20);
     }
 
     h1 {
@@ -249,28 +311,212 @@
       gap: 10px;
     }
 
-    .reading-item {
-      border-bottom: 1px dashed rgba(105, 180, 255, 0.26);
-      padding-bottom: 8px;
+    .block {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      border: 1px solid rgba(105, 180, 255, 0.18);
+      border-radius: 12px;
+      padding: 10px;
+      background:
+        linear-gradient(180deg, rgba(225, 255, 255, 0.04), rgba(30, 30, 30, 0.68));
+      box-shadow:
+        0 12px 30px rgba(0, 0, 0, 0.28),
+        0 0 0 1px rgba(225, 255, 255, 0.03) inset;
     }
 
-    .reading-item:last-child {
-      border-bottom: none;
-      padding-bottom: 0;
-    }
-
-    .reading-item h3 {
-      margin: 0 0 5px;
+    .block h3 {
+      margin: 0 0 7px;
       font-size: 13px;
       color: var(--primary-200);
       letter-spacing: .2px;
     }
 
-    .reading-item p {
+    .block p {
       margin: 0;
       color: var(--text-100);
       font-size: 13px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+    }
+
+    .summary-main {
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .summary-tip {
+      margin-top: 8px;
+      color: var(--text-200);
+      font-size: 12px;
       line-height: 1.6;
+    }
+
+    .theme-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-auto-rows: 1fr;
+      gap: 10px;
+    }
+
+    .theme-card {
+      border: 1px solid rgba(105, 180, 255, 0.22);
+      border-radius: 10px;
+      padding: 9px;
+      background:
+        linear-gradient(165deg, rgba(105, 180, 255, 0.12), rgba(0, 0, 0, 0) 42%),
+        rgba(30, 30, 30, 0.44);
+      box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.28),
+        0 0 0 1px rgba(225, 255, 255, 0.03) inset;
+      display: flex;
+      flex-direction: column;
+      min-height: 190px;
+    }
+
+    .theme-card h4 {
+      margin: 0 0 7px;
+      font-size: 12px;
+      color: var(--primary-300);
+      letter-spacing: .25px;
+    }
+
+    .theme-card p {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.65;
+      color: var(--text-100);
+      white-space: pre-wrap;
+      flex: 1;
+      max-height: 210px;
+      overflow: auto;
+      padding-right: 4px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(105, 180, 255, 0.45) transparent;
+    }
+
+    .theme-card p::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .theme-card p::-webkit-scrollbar-thumb {
+      background: rgba(105, 180, 255, 0.45);
+      border-radius: 999px;
+    }
+
+    .quality-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .metric {
+      border-radius: 10px;
+      border: 1px solid rgba(105, 180, 255, 0.22);
+      padding: 8px;
+      background: rgba(45, 45, 45, 0.56);
+    }
+
+    .metric-label {
+      display: block;
+      font-size: 11px;
+      color: var(--text-200);
+      margin-bottom: 3px;
+    }
+
+    .metric-value {
+      font-size: 14px;
+      color: var(--accent-200);
+      font-weight: 600;
+      letter-spacing: .2px;
+    }
+
+    #evidence-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .evidence-group {
+      border: 1px solid rgba(105, 180, 255, 0.2);
+      border-radius: 10px;
+      overflow: hidden;
+      background: rgba(30, 30, 30, 0.4);
+    }
+
+    .evidence-group summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 8px 10px;
+      color: var(--primary-300);
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .evidence-group summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .evidence-items {
+      border-top: 1px dashed rgba(105, 180, 255, 0.2);
+      padding: 8px 10px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .evidence-item {
+      font-size: 12px;
+      line-height: 1.55;
+      color: var(--text-100);
+      display: grid;
+      gap: 5px;
+    }
+
+    .factor-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .factor-tag {
+      border: 1px solid rgba(105, 180, 255, 0.28);
+      border-radius: 999px;
+      padding: 2px 7px;
+      font-size: 11px;
+      color: var(--primary-300);
+      background: rgba(0, 111, 255, 0.15);
+    }
+
+    .global-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .global-item {
+      border-bottom: 1px dashed rgba(105, 180, 255, 0.2);
+      padding-bottom: 6px;
+    }
+
+    .global-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .global-item h4 {
+      margin: 0 0 4px;
+      font-size: 12px;
+      color: var(--primary-200);
+      font-weight: 600;
+    }
+
+    .global-item p {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--text-100);
+      white-space: pre-wrap;
     }
 
     @media (max-width: 980px) {
@@ -281,6 +527,8 @@
     @media (max-width: 640px) {
       .grid { grid-template-columns: 1fr; }
       .actions { grid-template-columns: 1fr; }
+      .theme-grid { grid-template-columns: 1fr; }
+      .quality-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -352,28 +600,76 @@
       <p class="meta" id="meta"></p>
     </section>
 
-    <section class="result">
-      <div class="panel" id="chart-wrap"></div>
-      <section class="panel reading-panel">
-        <div class="reading-item"><h3>人格底色</h3><p id="card-personality">-</p></div>
-        <div class="reading-item"><h3>关系模式</h3><p id="card-relationship">-</p></div>
-        <div class="reading-item"><h3>爱情解析</h3><p id="card-love">-</p></div>
-        <div class="reading-item"><h3>事业路径</h3><p id="card-career">-</p></div>
-        <div class="reading-item"><h3>金钱主题</h3><p id="card-money">-</p></div>
-        <div class="reading-item"><h3>成长课题</h3><p id="card-growth">-</p></div>
-        <div class="reading-item"><h3>行动建议</h3><p id="card-action">-</p></div>
-        <div class="reading-item"><h3>关键相位</h3><p id="card-focus">-</p></div>
-      </section>
-    </section>
-  </main>
+	    <section class="result">
+	      <div class="panel" id="chart-wrap"></div>
+	      <section class="panel reading-panel">
+	        <section class="block">
+	          <h3>综合摘要</h3>
+	          <p class="summary-main" id="card-summary">-</p>
+	          <p class="summary-tip" id="card-reminder">-</p>
+	        </section>
+	        <section class="block">
+	          <h3>四大主题</h3>
+	          <div class="theme-grid">
+	            <article class="theme-card">
+	              <h4>爱情</h4>
+	              <p id="card-love">-</p>
+	            </article>
+	            <article class="theme-card">
+	              <h4>事业</h4>
+	              <p id="card-career">-</p>
+	            </article>
+	            <article class="theme-card">
+	              <h4>金钱</h4>
+	              <p id="card-money">-</p>
+	            </article>
+	            <article class="theme-card">
+	              <h4>家庭</h4>
+	              <p id="card-family">-</p>
+	            </article>
+	          </div>
+	        </section>
+	        <section class="block">
+	          <h3>依据链（可展开）</h3>
+	          <div id="evidence-list"></div>
+	        </section>
+	        <section class="block">
+	          <h3>质量指标</h3>
+	          <div class="quality-grid">
+	            <div class="metric"><span class="metric-label">字符数</span><span class="metric-value" id="metric-char-count">-</span></div>
+	            <div class="metric"><span class="metric-label">重复率</span><span class="metric-value" id="metric-dup-ratio">-</span></div>
+	            <div class="metric"><span class="metric-label">主题覆盖</span><span class="metric-value" id="metric-theme-coverage">-</span></div>
+	            <div class="metric"><span class="metric-label">一致性</span><span class="metric-value" id="metric-consistency">-</span></div>
+	          </div>
+	        </section>
+	        <section class="block">
+	          <h3>全局补充</h3>
+	          <div class="global-list">
+	            <div class="global-item"><h4>人格底色</h4><p id="card-personality">-</p></div>
+	            <div class="global-item"><h4>关系模式</h4><p id="card-relationship">-</p></div>
+	            <div class="global-item"><h4>成长课题</h4><p id="card-growth">-</p></div>
+	            <div class="global-item"><h4>行动建议</h4><p id="card-action">-</p></div>
+	            <div class="global-item"><h4>关键相位</h4><p id="card-focus">-</p></div>
+	          </div>
+	        </section>
+	      </section>
+	    </section>
+	  </main>
 
   <script>
     const form = document.querySelector('#chart-form');
-    const errorEl = document.querySelector('#error');
-    const metaEl = document.querySelector('#meta');
-    const chartWrap = document.querySelector('#chart-wrap');
-    const starCanvas = document.querySelector('#starfield');
-    let latest = null;
+	    const errorEl = document.querySelector('#error');
+	    const metaEl = document.querySelector('#meta');
+	    const chartWrap = document.querySelector('#chart-wrap');
+	    const starCanvas = document.querySelector('#starfield');
+	    const evidenceList = document.querySelector('#evidence-list');
+	    let latest = null;
+	    const themeLabels = {
+	      love: '爱情',
+	      career: '事业',
+	      money: '金钱',
+	      family: '家庭'
+	    };
 
     function readForm() {
       const data = Object.fromEntries(new FormData(form).entries());
@@ -575,22 +871,102 @@
       chartWrap.innerHTML = svg;
     }
 
-    function render(resp) {
-      latest = resp;
-      drawChart(resp.chart);
+	    function escapeHTML(text) {
+	      return (text || '').replace(/[&<>"']/g, (ch) => ({
+	        '&': '&amp;',
+	        '<': '&lt;',
+	        '>': '&gt;',
+	        '"': '&quot;',
+	        "'": '&#39;'
+	      }[ch]));
+	    }
 
-      document.querySelector('#card-personality').textContent = resp.reading.personality || '-';
-      document.querySelector('#card-relationship').textContent = resp.reading.relationship || '-';
-      document.querySelector('#card-love').textContent = resp.reading.love || '-';
-      document.querySelector('#card-career').textContent = resp.reading.career || '-';
-      document.querySelector('#card-money').textContent = resp.reading.money || '-';
-      document.querySelector('#card-growth').textContent = resp.reading.growth || '-';
-      document.querySelector('#card-action').textContent = resp.reading.action || '-';
-      document.querySelector('#card-focus').textContent = resp.reading.focus || '-';
+	    function renderEvidence(items) {
+	      if (!Array.isArray(items) || items.length === 0) {
+	        evidenceList.innerHTML = '<p class="summary-tip">暂无可展示依据。</p>';
+	        return;
+	      }
+	      const grouped = {};
+	      for (const item of items) {
+	        const key = item.theme || 'other';
+	        if (!grouped[key]) grouped[key] = [];
+	        grouped[key].push(item);
+	      }
+	      evidenceList.innerHTML = Object.entries(grouped).map(([theme, list], idx) => {
+	        const label = themeLabels[theme] || theme;
+	        const rows = list.map((item) => {
+	          const factors = (item.factors || []).map((f) => `<span class="factor-tag">${escapeHTML(f)}</span>`).join('');
+	          const confidence = Number.isFinite(item.confidence) ? `${Math.round(item.confidence * 100)}%` : '-';
+	          return `
+	            <article class="evidence-item">
+	              <div>${escapeHTML(item.claim || '')}</div>
+	              <div class="factor-tags">${factors || '<span class="factor-tag">无因素</span>'}</div>
+	              <div style="color:var(--text-200);font-size:11px;">置信度：${confidence}</div>
+	            </article>
+	          `;
+	        }).join('');
+	        return `
+	          <details class="evidence-group" ${idx === 0 ? 'open' : ''}>
+	            <summary><span>${label}</span><span>${list.length} 条依据</span></summary>
+	            <div class="evidence-items">${rows}</div>
+	          </details>
+	        `;
+	      }).join('');
+	    }
 
-      const warn = (resp.meta.warnings || []).join('；');
-      metaEl.textContent = `置信度 ${resp.meta.confidence.toFixed(2)} | ${resp.meta.confidence_note}${warn ? ' | ' + warn : ''}`;
-    }
+	    function render(resp) {
+	      latest = resp;
+	      drawChart(resp.chart);
+
+	      document.querySelector('#card-personality').textContent = resp.reading.personality || '-';
+	      document.querySelector('#card-relationship').textContent = resp.reading.relationship || '-';
+	      document.querySelector('#card-love').textContent = resp.reading.love || '-';
+	      document.querySelector('#card-career').textContent = resp.reading.career || '-';
+	      document.querySelector('#card-money').textContent = resp.reading.money || '-';
+	      document.querySelector('#card-family').textContent = resp.reading.family || '-';
+	      document.querySelector('#card-summary').textContent = resp.reading.summary || '-';
+	      document.querySelector('#card-reminder').textContent = `${resp.reading.reminder || '-'}\n${resp.reading.disclaimer || ''}`.trim();
+	      document.querySelector('#card-growth').textContent = resp.reading.growth || '-';
+	      document.querySelector('#card-action').textContent = resp.reading.action || '-';
+	      document.querySelector('#card-focus').textContent = resp.reading.focus || '-';
+	      renderEvidence(resp.reading.evidence || []);
+	      const quality = resp.reading.quality || {};
+	      document.querySelector('#metric-char-count').textContent = Number.isFinite(quality.char_count) ? `${quality.char_count}` : '-';
+	      document.querySelector('#metric-dup-ratio').textContent = Number.isFinite(quality.duplicate_ratio) ? `${(quality.duplicate_ratio * 100).toFixed(1)}%` : '-';
+	      document.querySelector('#metric-theme-coverage').textContent = Number.isFinite(quality.theme_coverage) ? `${(quality.theme_coverage * 100).toFixed(0)}%` : '-';
+	      document.querySelector('#metric-consistency').textContent = Number.isFinite(quality.consistency_score) ? quality.consistency_score.toFixed(2) : '-';
+
+	      const warn = (resp.meta.warnings || []).join('；');
+	      metaEl.textContent = `置信度 ${resp.meta.confidence.toFixed(2)} | ${resp.meta.confidence_note}${warn ? ' | ' + warn : ''}`;
+	    }
+
+	    function bindGlowTracking() {
+	      const targets = document.querySelectorAll('.panel, .block');
+	      for (const el of targets) {
+	        el.classList.add('glow-track');
+	        el.addEventListener('mouseenter', (evt) => {
+	          el.classList.add('is-hover');
+	          const rect = el.getBoundingClientRect();
+	          if (rect.width && rect.height) {
+	            const x = ((evt.clientX - rect.left) / rect.width) * 100;
+	            const y = ((evt.clientY - rect.top) / rect.height) * 100;
+	            el.style.setProperty('--mx', `${Math.max(0, Math.min(100, x)).toFixed(2)}%`);
+	            el.style.setProperty('--my', `${Math.max(0, Math.min(100, y)).toFixed(2)}%`);
+	          }
+	        });
+	        el.addEventListener('mousemove', (evt) => {
+	          const rect = el.getBoundingClientRect();
+	          if (!rect.width || !rect.height) return;
+	          const x = ((evt.clientX - rect.left) / rect.width) * 100;
+	          const y = ((evt.clientY - rect.top) / rect.height) * 100;
+	          el.style.setProperty('--mx', `${Math.max(0, Math.min(100, x)).toFixed(2)}%`);
+	          el.style.setProperty('--my', `${Math.max(0, Math.min(100, y)).toFixed(2)}%`);
+	        });
+	        el.addEventListener('mouseleave', () => {
+	          el.classList.remove('is-hover');
+	        });
+	      }
+	    }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -699,8 +1075,9 @@
       requestAnimationFrame(animateStarfield);
     }
 
-    setupStarfield();
-    animateStarfield();
-  </script>
+	    setupStarfield();
+	    animateStarfield();
+	    bindGlowTracking();
+	  </script>
 </body>
 </html>

@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: astrolabe
+    runtime: go
+    plan: free
+    buildCommand: go build -o bin/astrolabe ./cmd/server
+    startCommand: ./bin/astrolabe
+    autoDeploy: true
+    envVars:
+      - key: GO_VERSION
+        value: 1.22.0
+      - key: PORT
+        value: 10000

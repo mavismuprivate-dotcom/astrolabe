@@ -1,0 +1,706 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Astrolabe - 西方本命盘</title>
+  <style>
+    :root {
+      --primary-100:#0085ff;
+      --primary-200:#69b4ff;
+      --primary-300:#e0ffff;
+      --accent-100:#006fff;
+      --accent-200:#e1ffff;
+      --text-100:#FFFFFF;
+      --text-200:#9e9e9e;
+      --bg-100:#1E1E1E;
+      --bg-200:#2d2d2d;
+      --bg-300:#454545;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text-100);
+      background: radial-gradient(circle at 20% -10%, #2b3f5f 0%, var(--bg-100) 36%, #141414 100%);
+      font-family: "Avenir Next", "PingFang SC", "Noto Sans CJK SC", sans-serif;
+      overflow-x: hidden;
+    }
+
+    #starfield {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .nebula {
+      position: fixed;
+      inset: -10% -20% auto auto;
+      width: 62vw;
+      height: 62vw;
+      max-width: 860px;
+      max-height: 860px;
+      border-radius: 999px;
+      background: radial-gradient(circle at center, rgba(0,133,255,0.12) 0%, rgba(105,180,255,0.06) 45%, transparent 72%);
+      filter: blur(24px);
+      z-index: 0;
+      pointer-events: none;
+      animation: drift 16s ease-in-out infinite alternate;
+    }
+
+    @keyframes drift {
+      from { transform: translate3d(0, 0, 0); }
+      to { transform: translate3d(-4%, 5%, 0); }
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 20px 14px 32px;
+      display: grid;
+      grid-template-columns: 360px minmax(0, 1fr);
+      gap: 14px;
+    }
+
+    .panel {
+      background: rgba(45, 45, 45, 0.72);
+      border: 1px solid rgba(105, 180, 255, 0.24);
+      border-radius: 14px;
+      padding: 14px;
+      backdrop-filter: blur(7px);
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.32);
+    }
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: 22px;
+      letter-spacing: .4px;
+      color: var(--primary-300);
+      font-weight: 650;
+    }
+
+    .sub {
+      margin: 0 0 12px;
+      color: var(--text-200);
+      font-size: 12px;
+      letter-spacing: .4px;
+      text-transform: uppercase;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 12px;
+      color: var(--text-200);
+    }
+
+    input, select, button {
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid rgba(105, 180, 255, 0.28);
+      background: rgba(30, 30, 30, 0.88);
+      color: var(--text-100);
+      padding: 9px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    input[type="date"], input[type="time"] {
+      color-scheme: dark;
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="time"]::-webkit-calendar-picker-indicator {
+      filter: invert(1) brightness(2) saturate(0);
+      opacity: .95;
+      cursor: pointer;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--primary-200);
+      box-shadow: 0 0 0 3px rgba(0, 133, 255, 0.15);
+    }
+
+    button {
+      cursor: pointer;
+      font-weight: 600;
+      letter-spacing: .2px;
+      border: none;
+      background: linear-gradient(120deg, var(--primary-100), var(--accent-100));
+      transition: transform .14s ease, filter .14s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.08);
+    }
+
+    .secondary {
+      background: linear-gradient(120deg, #425168, #566179);
+    }
+
+    .actions {
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .error {
+      min-height: 18px;
+      margin: 10px 0 0;
+      color: #ff7c8d;
+      font-size: 13px;
+    }
+
+    .meta {
+      margin: 8px 0 0;
+      color: var(--text-200);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .result {
+      display: grid;
+      gap: 14px;
+      justify-items: center;
+      align-content: start;
+    }
+
+    #chart-wrap {
+      width: min(100%, 680px);
+      aspect-ratio: 1 / 1;
+      max-height: min(76vh, 700px);
+      border-radius: 14px;
+      border: 1px solid rgba(105, 180, 255, 0.28);
+      background: radial-gradient(circle at 50% 40%, rgba(0,111,255,0.14) 0%, rgba(30,30,30,0.82) 58%, rgba(20,20,20,0.96) 100%);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 50px rgba(0, 133, 255, 0.08);
+    }
+
+    #chart-wrap svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    #chart-wrap svg .aspect-line {
+      fill: none;
+      stroke-width: 1.4;
+      stroke-linecap: round;
+      stroke-dasharray: 10 14;
+      animation: flow 9s linear infinite;
+      opacity: .78;
+    }
+
+    #chart-wrap svg .aspect-line.glow {
+      stroke-width: 4;
+      opacity: .18;
+      filter: url(#lineGlow);
+    }
+
+    #chart-wrap svg .aspect-conjunction { stroke: #9dd7ff; }
+    #chart-wrap svg .aspect-sextile { stroke: #6db7ff; }
+    #chart-wrap svg .aspect-square { stroke: #4f8cff; }
+    #chart-wrap svg .aspect-trine { stroke: #83e8ff; }
+    #chart-wrap svg .aspect-opposition { stroke: #c3f0ff; }
+    #chart-wrap svg .zodiac-label {
+      fill: rgba(225,255,255,0.90);
+      font-size: 12px;
+      letter-spacing: .4px;
+    }
+    #chart-wrap svg .house-index {
+      fill: rgba(158,158,158,0.95);
+      font-size: 10px;
+      letter-spacing: .2px;
+    }
+    #chart-wrap svg .planet-label {
+      fill: rgba(255,255,255,0.92);
+      paint-order: stroke;
+      stroke: rgba(13,13,13,0.35);
+      stroke-width: 2px;
+      stroke-linejoin: round;
+      font-weight: 600;
+    }
+
+    @keyframes flow {
+      to { stroke-dashoffset: -320; }
+    }
+
+    .reading-panel {
+      width: min(100%, 680px);
+      display: grid;
+      gap: 10px;
+    }
+
+    .reading-item {
+      border-bottom: 1px dashed rgba(105, 180, 255, 0.26);
+      padding-bottom: 8px;
+    }
+
+    .reading-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .reading-item h3 {
+      margin: 0 0 5px;
+      font-size: 13px;
+      color: var(--primary-200);
+      letter-spacing: .2px;
+    }
+
+    .reading-item p {
+      margin: 0;
+      color: var(--text-100);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 980px) {
+      .app { grid-template-columns: 1fr; }
+      #chart-wrap { max-height: min(62vh, 560px); }
+    }
+
+    @media (max-width: 640px) {
+      .grid { grid-template-columns: 1fr; }
+      .actions { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="starfield" aria-hidden="true"></canvas>
+  <div class="nebula" aria-hidden="true"></div>
+
+  <main class="app">
+    <section class="panel">
+      <h1>西方本命盘</h1>
+      <p class="sub">Minimal Cosmic Interface</p>
+
+      <form id="chart-form">
+        <div class="grid">
+          <div>
+            <label>出生日期</label>
+            <input name="birth_date" type="date" min="0001-01-01" max="9999-12-31" required />
+          </div>
+          <div>
+            <label>出生时间（可空）</label>
+            <input name="birth_time" type="time" />
+          </div>
+          <div>
+            <label>出生省份</label>
+            <select name="birth_province" required>
+              <option value="">请选择</option>
+              <option>北京市</option><option>天津市</option><option>河北省</option><option>山西省</option><option>内蒙古自治区</option>
+              <option>辽宁省</option><option>吉林省</option><option>黑龙江省</option><option>上海市</option><option>江苏省</option>
+              <option>浙江省</option><option>安徽省</option><option>福建省</option><option>江西省</option><option>山东省</option>
+              <option>河南省</option><option>湖北省</option><option>湖南省</option><option>广东省</option><option>广西壮族自治区</option>
+              <option>海南省</option><option>重庆市</option><option>四川省</option><option>贵州省</option><option>云南省</option>
+              <option>西藏自治区</option><option>陕西省</option><option>甘肃省</option><option>青海省</option><option>宁夏回族自治区</option>
+              <option>新疆维吾尔自治区</option><option>香港特别行政区</option><option>澳门特别行政区</option><option>台湾省</option>
+            </select>
+          </div>
+          <div>
+            <label>国家/地区</label>
+            <input name="birth_country" value="中国" readonly />
+          </div>
+          <div>
+            <label>时区（可空）</label>
+            <input name="timezone" placeholder="默认按省份自动推断" />
+          </div>
+          <div>
+            <label>宫位系统</label>
+            <select name="house_system"><option value="placidus">placidus</option></select>
+          </div>
+          <div>
+            <label>黄道类型</label>
+            <select name="zodiac_type"><option value="tropical">tropical</option></select>
+          </div>
+          <div>
+            <label>语言</label>
+            <select name="language"><option value="zh-CN">zh-CN</option></select>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="submit">生成星盘</button>
+          <button class="secondary" type="button" id="download-json">下载 JSON</button>
+        </div>
+        <div class="actions" style="margin-top:8px;">
+          <button class="secondary" type="button" id="copy-report">复制文本报告</button>
+          <button class="secondary" type="button" id="fill-sample">填充示例</button>
+        </div>
+      </form>
+
+      <p class="error" id="error"></p>
+      <p class="meta" id="meta"></p>
+    </section>
+
+    <section class="result">
+      <div class="panel" id="chart-wrap"></div>
+      <section class="panel reading-panel">
+        <div class="reading-item"><h3>人格底色</h3><p id="card-personality">-</p></div>
+        <div class="reading-item"><h3>关系模式</h3><p id="card-relationship">-</p></div>
+        <div class="reading-item"><h3>爱情解析</h3><p id="card-love">-</p></div>
+        <div class="reading-item"><h3>事业路径</h3><p id="card-career">-</p></div>
+        <div class="reading-item"><h3>金钱主题</h3><p id="card-money">-</p></div>
+        <div class="reading-item"><h3>成长课题</h3><p id="card-growth">-</p></div>
+        <div class="reading-item"><h3>行动建议</h3><p id="card-action">-</p></div>
+        <div class="reading-item"><h3>关键相位</h3><p id="card-focus">-</p></div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const form = document.querySelector('#chart-form');
+    const errorEl = document.querySelector('#error');
+    const metaEl = document.querySelector('#meta');
+    const chartWrap = document.querySelector('#chart-wrap');
+    const starCanvas = document.querySelector('#starfield');
+    let latest = null;
+
+    function readForm() {
+      const data = Object.fromEntries(new FormData(form).entries());
+      Object.keys(data).forEach((k) => {
+        if (data[k] === '') delete data[k];
+      });
+      if (data.birth_province && !data.birth_city) {
+        data.birth_city = data.birth_province;
+      }
+      if (!data.birth_country) {
+        data.birth_country = '中国';
+      }
+      data.calendar = 'gregorian';
+      return data;
+    }
+
+    function isValidBirthDate(value) {
+      if (!value) return false;
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+      if (!m) return false;
+      const year = Number(m[1]);
+      return year >= 1 && year <= 9999;
+    }
+
+    function polar(cx, cy, r, deg) {
+      const rad = (deg - 90) * Math.PI / 180;
+      return { x: cx + Math.cos(rad) * r, y: cy + Math.sin(rad) * r };
+    }
+
+    function normalizeAngle(deg) {
+      let d = deg % 360;
+      if (d < 0) d += 360;
+      return d;
+    }
+
+    function ringSectorPath(cx, cy, rOuter, rInner, startDeg, endDeg) {
+      const start = normalizeAngle(startDeg);
+      const end = normalizeAngle(endDeg);
+      const sweep = ((end - start + 360) % 360) || 360;
+      const large = sweep > 180 ? 1 : 0;
+      const a1 = polar(cx, cy, rOuter, start);
+      const a2 = polar(cx, cy, rOuter, start + sweep);
+      const b1 = polar(cx, cy, rInner, start + sweep);
+      const b2 = polar(cx, cy, rInner, start);
+      return `M ${a1.x} ${a1.y} A ${rOuter} ${rOuter} 0 ${large} 1 ${a2.x} ${a2.y} L ${b1.x} ${b1.y} A ${rInner} ${rInner} 0 ${large} 0 ${b2.x} ${b2.y} Z`;
+    }
+
+    function chartSize() {
+      const maxByPanel = Math.min(chartWrap.clientWidth - 16, window.innerWidth - 24, window.innerHeight * 0.72);
+      return Math.max(280, Math.floor(maxByPanel));
+    }
+
+    function drawChart(chart) {
+      const size = chartSize();
+      const cx = size / 2;
+      const cy = size / 2;
+      const outer = Math.floor(size * 0.45);
+      const mid = Math.floor(size * 0.36);
+      const inner = Math.floor(size * 0.285);
+      const font = Math.max(8, Math.floor(size * 0.017));
+      const pointR = Math.max(2.6, Math.floor(size * 0.006));
+      const labelMap = {
+        Sun: 'SU', Moon: 'MO', Mercury: 'ME', Venus: 'VE', Mars: 'MA',
+        Jupiter: 'JU', Saturn: 'SA', Uranus: 'UR', Neptune: 'NE', Pluto: 'PL'
+      };
+      const zodiacSymbols = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
+
+      let svg = `<svg viewBox="0 0 ${size} ${size}" role="img" aria-label="natal-chart">`;
+      svg += `
+        <defs>
+          <filter id="lineGlow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="2.5" result="blur"/>
+            <feMerge>
+              <feMergeNode in="blur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+          <radialGradient id="chartCore" cx="50%" cy="45%" r="62%">
+            <stop offset="0%" stop-color="rgba(224,255,255,0.15)"/>
+            <stop offset="48%" stop-color="rgba(0,133,255,0.10)"/>
+            <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+          </radialGradient>
+          <radialGradient id="planetHalo" cx="50%" cy="50%" r="70%">
+            <stop offset="0%" stop-color="rgba(224,255,255,0.88)"/>
+            <stop offset="100%" stop-color="rgba(0,133,255,0.0)"/>
+          </radialGradient>
+        </defs>
+      `;
+
+      for (let i = 0; i < 12; i++) {
+        const start = i * 30;
+        const end = start + 30;
+        const fillAlpha = i % 2 === 0 ? 0.05 : 0.02;
+        svg += `<path d="${ringSectorPath(cx, cy, outer, mid, start, end)}" fill="rgba(105,180,255,${fillAlpha})"/>`;
+      }
+
+      svg += `<circle cx="${cx}" cy="${cy}" r="${outer}" fill="url(#chartCore)" stroke="rgba(105,180,255,0.44)" stroke-width="1.5"/>`;
+      svg += `<circle cx="${cx}" cy="${cy}" r="${mid}" fill="none" stroke="rgba(105,180,255,0.24)" stroke-width="1"/>`;
+      svg += `<circle cx="${cx}" cy="${cy}" r="${inner}" fill="none" stroke="rgba(105,180,255,0.28)" stroke-width="1.2"/>`;
+
+      for (let i = 0; i < 12; i++) {
+        const deg = chart.houses[i].cusp;
+        const a = polar(cx, cy, inner, deg);
+        const b = polar(cx, cy, outer, deg);
+        svg += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="rgba(105,180,255,0.30)" stroke-width="1"/>`;
+      }
+
+      for (let i = 0; i < 12; i++) {
+        const deg = i * 30 + 15;
+        const z = polar(cx, cy, outer + Math.max(14, size * 0.025), deg);
+        svg += `<text class="zodiac-label" x="${z.x}" y="${z.y}" text-anchor="middle" dominant-baseline="middle">${zodiacSymbols[i]}</text>`;
+      }
+
+      for (let i = 0; i < 12; i++) {
+        const start = chart.houses[i].cusp;
+        const next = chart.houses[(i + 1) % 12].cusp;
+        const end = next < start ? next + 360 : next;
+        const midDeg = normalizeAngle((start + end) / 2);
+        const hp = polar(cx, cy, (mid + inner) / 2, midDeg);
+        svg += `<text class="house-index" x="${hp.x}" y="${hp.y}" text-anchor="middle" dominant-baseline="middle">${i + 1}</text>`;
+      }
+
+      const planetPoints = {};
+      const sortedPlanets = Object.entries(chart.planets).sort((a, b) => a[1].longitude - b[1].longitude);
+      const offsetPattern = [0, 12, -12, 20, -20, 27, -27];
+      let prevLon = null;
+      let cluster = 0;
+      for (const [name, p] of sortedPlanets) {
+        if (prevLon !== null && Math.abs(p.longitude - prevLon) < 9.8) {
+          cluster += 1;
+        } else {
+          cluster = 0;
+        }
+        prevLon = p.longitude;
+        const r = mid - 11 + (offsetPattern[cluster] || 0);
+        planetPoints[name] = polar(cx, cy, r, p.longitude);
+      }
+
+      const aspectClass = {
+        conjunction: 'aspect-conjunction',
+        sextile: 'aspect-sextile',
+        square: 'aspect-square',
+        trine: 'aspect-trine',
+        opposition: 'aspect-opposition'
+      };
+      const aspectColors = {
+        conjunction: ['rgba(224,255,255,0.92)', 'rgba(157,215,255,0.82)'],
+        sextile: ['rgba(105,180,255,0.95)', 'rgba(0,133,255,0.78)'],
+        square: ['rgba(126,175,255,0.95)', 'rgba(79,140,255,0.78)'],
+        trine: ['rgba(131,232,255,0.94)', 'rgba(0,133,255,0.70)'],
+        opposition: ['rgba(225,255,255,0.96)', 'rgba(195,240,255,0.82)']
+      };
+
+      let gradients = '';
+      let aspectLines = '';
+      const drawnAspects = chart.aspects.slice(0, 36);
+
+      drawnAspects.forEach((asp, idx) => {
+        const a = planetPoints[asp.body_a];
+        const b = planetPoints[asp.body_b];
+        if (!a || !b) return;
+        const cls = aspectClass[asp.type] || 'aspect-conjunction';
+        const colors = aspectColors[asp.type] || aspectColors.conjunction;
+        const gradId = `aspGrad${idx}`;
+        gradients += `<linearGradient id="${gradId}" gradientUnits="userSpaceOnUse" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"><stop offset="0%" stop-color="${colors[0]}"/><stop offset="100%" stop-color="${colors[1]}"/></linearGradient>`;
+        const delay = (idx % 6) * 0.4;
+        aspectLines += `<line class="aspect-line glow ${cls}" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="url(#${gradId})" style="animation-delay:${delay}s"/>`;
+        aspectLines += `<line class="aspect-line ${cls}" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="url(#${gradId})" style="animation-delay:${delay}s"/>`;
+      });
+      if (gradients) {
+        svg += `<defs>${gradients}</defs>`;
+      }
+      svg += aspectLines;
+
+      for (const [name, p] of sortedPlanets) {
+        const pt = planetPoints[name];
+        svg += `<circle cx="${pt.x}" cy="${pt.y}" r="${pointR + 7}" fill="url(#planetHalo)" opacity="0.28"/>`;
+        svg += `<circle cx="${pt.x}" cy="${pt.y}" r="${pointR + 2.4}" fill="rgba(0,133,255,0.25)"/>`;
+        svg += `<circle cx="${pt.x}" cy="${pt.y}" r="${pointR}" fill="rgba(224,255,255,0.95)"/>`;
+        svg += `<text class="planet-label" x="${pt.x + pointR + 3}" y="${pt.y + pointR}" font-size="${font}" letter-spacing=".4">${labelMap[name] || name.slice(0,2).toUpperCase()}</text>`;
+      }
+
+      if (chart.angles && chart.angles.ASC) {
+        const ascLine = polar(cx, cy, outer + 6, chart.angles.ASC.longitude);
+        const ascCore = polar(cx, cy, inner - 10, chart.angles.ASC.longitude);
+        const asc = polar(cx, cy, outer + Math.max(18, size * 0.03), chart.angles.ASC.longitude);
+        svg += `<line x1="${ascCore.x}" y1="${ascCore.y}" x2="${ascLine.x}" y2="${ascLine.y}" stroke="rgba(224,255,255,0.46)" stroke-width="1.2"/>`;
+        svg += `<text x="${asc.x}" y="${asc.y}" fill="rgba(224,255,255,0.90)" font-size="${Math.max(9, font)}" text-anchor="middle">ASC</text>`;
+      }
+      if (chart.angles && chart.angles.MC) {
+        const mcLine = polar(cx, cy, outer + 6, chart.angles.MC.longitude);
+        const mcCore = polar(cx, cy, inner - 10, chart.angles.MC.longitude);
+        const mc = polar(cx, cy, outer + Math.max(18, size * 0.03), chart.angles.MC.longitude);
+        svg += `<line x1="${mcCore.x}" y1="${mcCore.y}" x2="${mcLine.x}" y2="${mcLine.y}" stroke="rgba(224,255,255,0.46)" stroke-width="1.2"/>`;
+        svg += `<text x="${mc.x}" y="${mc.y}" fill="rgba(224,255,255,0.90)" font-size="${Math.max(9, font)}" text-anchor="middle">MC</text>`;
+      }
+
+      svg += `</svg>`;
+      chartWrap.innerHTML = svg;
+    }
+
+    function render(resp) {
+      latest = resp;
+      drawChart(resp.chart);
+
+      document.querySelector('#card-personality').textContent = resp.reading.personality || '-';
+      document.querySelector('#card-relationship').textContent = resp.reading.relationship || '-';
+      document.querySelector('#card-love').textContent = resp.reading.love || '-';
+      document.querySelector('#card-career').textContent = resp.reading.career || '-';
+      document.querySelector('#card-money').textContent = resp.reading.money || '-';
+      document.querySelector('#card-growth').textContent = resp.reading.growth || '-';
+      document.querySelector('#card-action').textContent = resp.reading.action || '-';
+      document.querySelector('#card-focus').textContent = resp.reading.focus || '-';
+
+      const warn = (resp.meta.warnings || []).join('；');
+      metaEl.textContent = `置信度 ${resp.meta.confidence.toFixed(2)} | ${resp.meta.confidence_note}${warn ? ' | ' + warn : ''}`;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorEl.textContent = '';
+
+      try {
+        const payload = readForm();
+        if (!isValidBirthDate(payload.birth_date)) {
+          errorEl.textContent = '出生日期格式应为 YYYY-MM-DD，且年份必须是 4 位数字';
+          return;
+        }
+
+        const res = await fetch('/api/v1/chart/natal', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          errorEl.textContent = data.error || '请求失败';
+          return;
+        }
+        render(data);
+      } catch (err) {
+        errorEl.textContent = err.message || '网络错误';
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      if (latest) drawChart(latest.chart);
+      setupStarfield();
+    });
+
+    document.querySelector('#download-json').addEventListener('click', () => {
+      if (!latest) return;
+      const blob = new Blob([JSON.stringify(latest, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'natal-chart.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.querySelector('#copy-report').addEventListener('click', async () => {
+      if (!latest) return;
+      try {
+        await navigator.clipboard.writeText(latest.reading.text_report || '');
+        errorEl.style.color = '#70d2ff';
+        errorEl.textContent = '文本报告已复制';
+        setTimeout(() => {
+          errorEl.style.color = '#ff7c8d';
+          errorEl.textContent = '';
+        }, 1200);
+      } catch (_) {
+        errorEl.textContent = '复制失败';
+      }
+    });
+
+    document.querySelector('#fill-sample').addEventListener('click', () => {
+      form.birth_date.value = '1990-01-01';
+      form.birth_time.value = '08:15';
+      form.birth_province.value = '江苏省';
+      form.birth_country.value = '中国';
+      form.timezone.value = '';
+    });
+
+    let stars = [];
+    let ctx;
+    let vw = 0;
+    let vh = 0;
+    let dpr = 1;
+
+    function setupStarfield() {
+      dpr = window.devicePixelRatio || 1;
+      vw = window.innerWidth;
+      vh = window.innerHeight;
+      starCanvas.width = Math.floor(vw * dpr);
+      starCanvas.height = Math.floor(vh * dpr);
+      starCanvas.style.width = `${vw}px`;
+      starCanvas.style.height = `${vh}px`;
+      ctx = starCanvas.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const count = Math.max(120, Math.min(320, Math.floor((vw * vh) / 7200)));
+      stars = Array.from({ length: count }, () => ({
+        x: Math.random() * vw,
+        y: Math.random() * vh,
+        r: 0.3 + Math.random() * 1.4,
+        a: 0.15 + Math.random() * 0.75,
+        da: (0.002 + Math.random() * 0.014) * (Math.random() > 0.5 ? 1 : -1)
+      }));
+    }
+
+    function animateStarfield() {
+      if (!ctx) return;
+      ctx.clearRect(0, 0, vw, vh);
+      for (const s of stars) {
+        s.a += s.da;
+        if (s.a > 0.95 || s.a < 0.12) s.da *= -1;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(225,255,255,${s.a})`;
+        ctx.fill();
+      }
+      requestAnimationFrame(animateStarfield);
+    }
+
+    setupStarfield();
+    animateStarfield();
+  </script>
+</body>
+</html>

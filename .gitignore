@@ -1,0 +1,16 @@
+# Build outputs
+bin/
+*.out
+*.test
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/
+
+# Env files
+.env
+.env.*
+
+# Logs
+*.log

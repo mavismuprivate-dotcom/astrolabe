@@ -17,6 +17,7 @@ type NatalChartRequest struct {
 }
 
 type NatalChartResponse struct {
+	ReportID string   `json:"report_id,omitempty"`
 	Meta    MetaInfo `json:"meta"`
 	Chart   Chart    `json:"chart"`
 	Reading Reading  `json:"reading"`

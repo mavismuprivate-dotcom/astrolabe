@@ -1,0 +1,8 @@
+.git
+.gitignore
+.playwright-cli
+.server.out.log
+.server.err.log
+bin
+data
+docs/plans

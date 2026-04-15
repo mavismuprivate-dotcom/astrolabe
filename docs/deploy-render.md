@@ -1,32 +1,52 @@
-# Render Free Deployment
+# Render Deployment
 
-This project is ready for Render deployment with the included `render.yaml`.
+This repository includes a ready-to-use `render.yaml` for a Render web service.
 
-## 1) Push to GitHub
+## What the current blueprint does
+
+- Uses the native Go runtime
+- Builds `./cmd/server`
+- Starts the app with `./bin/astrolabe`
+- Pins `GO_VERSION=1.24.5`
+- Stores SQLite data at `/tmp/astrolabe.db`
+
+## Important limitation
+
+`/tmp/astrolabe.db` is writable on Render, but it is not persistent on the free plan.
+That means:
+
+- report history can be lost on restart or redeploy
+- session-scoped reports are fine for preview/testing
+- production persistence needs a Render Disk or an external database
+
+## 1) Push the repository to GitHub
 
 ```bash
-git init
 git add .
-git commit -m "feat: astrolabe natal chart app"
-# Replace with your repo
+git commit -m "chore: prepare deployment config"
 git remote add origin <YOUR_GITHUB_REPO_URL>
 git branch -M main
 git push -u origin main
 ```
 
-## 2) Create Render service from blueprint
+## 2) Create the service from Blueprint
 
-1. Open Render dashboard.
-2. New -> Blueprint.
-3. Select this GitHub repo.
-4. Render reads `render.yaml` and creates `astrolabe` web service.
+1. Open the Render dashboard.
+2. Create a new `Blueprint`.
+3. Select the GitHub repository.
+4. Confirm the generated `astrolabe` web service.
 
-## 3) Verify
+## 3) Verify the deployment
 
-- Health check: `https://<your-service>.onrender.com/healthz`
-- App page: `https://<your-service>.onrender.com/`
+- App: `https://<your-service>.onrender.com/`
+- Health: `https://<your-service>.onrender.com/healthz`
 
-## Notes
+Expected health response:
 
-- Free plan sleeps when idle.
-- First request after idle may take longer.
+```json
+{"status":"ok"}
+```
+
+## 4) If you need persistence later
+
+Move `ASTROLABE_DB_PATH` off `/tmp` and onto persistent storage, or replace SQLite with a managed database.

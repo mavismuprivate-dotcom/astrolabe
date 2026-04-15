@@ -8,6 +8,8 @@ services:
     autoDeploy: true
     envVars:
       - key: GO_VERSION
-        value: 1.22.0
+        value: 1.24.5
       - key: PORT
         value: 10000
+      - key: ASTROLABE_DB_PATH
+        value: /tmp/astrolabe.db

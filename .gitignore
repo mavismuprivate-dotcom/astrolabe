@@ -14,3 +14,7 @@ bin/
 
 # Logs
 *.log
+
+# Local runtime artifacts
+.playwright-cli/
+data/

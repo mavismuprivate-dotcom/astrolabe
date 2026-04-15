@@ -405,13 +405,14 @@
 
     .generator-layout {
       display: grid;
-      grid-template-columns: minmax(280px, 0.85fr) minmax(0, 1.15fr);
+      grid-template-columns: minmax(240px, 0.72fr) minmax(0, 1.12fr) minmax(260px, 0.76fr);
       gap: 24px;
       align-items: start;
     }
 
     .intro-surface,
     .form-surface,
+    .reports-surface,
     .chart-stage,
     .reading-stack > .surface,
     .todo-card {
@@ -576,17 +577,138 @@
       line-height: 1.7;
     }
 
+    .reports-surface {
+      display: grid;
+      gap: 18px;
+      align-content: start;
+    }
+
+    .reports-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .reports-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .reports-actions .action-button {
+      min-height: 40px;
+      padding: 10px 14px;
+      font-size: 13px;
+    }
+
+    .reports-note {
+      margin: 0;
+      color: var(--text-muted);
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    .report-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .report-list-empty {
+      padding: 16px;
+      border-radius: 16px;
+      border: 1px dashed rgba(255, 255, 255, 0.14);
+      color: var(--text-soft);
+      font-size: 13px;
+      line-height: 1.7;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .report-item {
+      width: 100%;
+      padding: 16px;
+      text-align: left;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.04);
+      color: #ffffff;
+      cursor: pointer;
+      transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+    }
+
+    .report-item:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255, 255, 255, 0.28);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .report-item.is-active {
+      border-color: rgba(255, 255, 255, 0.44);
+      background: rgba(255, 255, 255, 0.12);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    }
+
+    .report-item-title,
+    .report-item-meta,
+    .report-item-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .report-item-title {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .report-item-title strong {
+      font-weight: 600;
+    }
+
+    .report-item-meta,
+    .report-item-foot {
+      margin-top: 10px;
+      color: var(--text-soft);
+      font-size: 12px;
+    }
+
+    .report-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.05);
+      white-space: nowrap;
+    }
+
     .chart-stage {
       display: grid;
-      grid-template-columns: minmax(240px, 0.42fr) minmax(0, 0.58fr);
-      gap: 24px;
-      align-items: center;
+      grid-template-columns: minmax(180px, 0.26fr) minmax(0, 0.74fr);
+      gap: 18px;
+      align-items: start;
     }
 
     .chart-copy {
       display: grid;
-      gap: 18px;
+      gap: 8px;
       align-content: start;
+    }
+
+    .chart-copy.chart-copy-compact {
+      padding-top: 8px;
+    }
+
+    .chart-copy.chart-copy-compact h3 {
+      font-size: 18px;
+    }
+
+    .chart-copy.chart-copy-compact p {
+      font-size: 13px;
+      line-height: 1.55;
+      max-width: 240px;
     }
 
     .chart-frame {
@@ -704,6 +826,29 @@
       margin-top: 10px;
       color: var(--text-soft);
       font-size: 13px;
+    }
+
+    .summary-card.summary-card-compact {
+      display: grid;
+      gap: 8px;
+      padding-top: 20px;
+      padding-bottom: 20px;
+    }
+
+    .summary-card.summary-card-compact h3 {
+      margin-bottom: 2px;
+    }
+
+    .summary-card.summary-card-compact .summary-main {
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text-muted);
+    }
+
+    .summary-card.summary-card-compact .summary-tip {
+      margin-top: 0;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.92);
     }
 
     .theme-grid {
@@ -892,6 +1037,7 @@
 
       .intro-surface,
       .form-surface,
+      .reports-surface,
       .chart-stage,
       .reading-stack > .surface,
       .todo-card {
@@ -924,19 +1070,19 @@
         <a class="wordmark" href="#hero">ASTROLABE</a>
         <nav class="site-nav" aria-label="主导航">
           <a class="nav-link" href="#generator">
-            <span>开始生成</span>
+            <span>我的信息</span>
             <span class="nav-arrow" aria-hidden="true">⌄</span>
           </a>
           <a class="nav-link" href="#chart-section">
-            <span>星盘展示</span>
+            <span>我的星盘</span>
             <span class="nav-arrow" aria-hidden="true">⌄</span>
           </a>
           <a class="nav-link" href="#reading-section">
-            <span>解读内容</span>
+            <span>本命解读</span>
             <span class="nav-arrow" aria-hidden="true">⌄</span>
           </a>
           <a class="nav-link" href="#todo-section">
-            <span>更多功能</span>
+            <span>更多内容</span>
             <span class="nav-arrow" aria-hidden="true">⌄</span>
           </a>
         </nav>
@@ -1049,31 +1195,53 @@
               </div>
 
               <div class="actions">
+                <button class="action-button" type="button" id="download-pdf">下载 PDF</button>
                 <button class="action-button" type="button" id="copy-report">复制文本报告</button>
+                <button class="action-button" type="button" id="copy-report-link">复制详情链接</button>
+              </div>
+
+              <div class="actions">
                 <button class="action-button" type="button" id="fill-sample">填充示例</button>
+                <span></span>
               </div>
             </form>
 
             <p class="feedback" id="error"></p>
             <p class="meta" id="meta">结果生成后，置信度、说明和附加警告会显示在这里。</p>
           </section>
+
+          <aside class="surface reports-surface">
+            <div class="reports-header">
+              <h3>最近报告</h3>
+              <div class="reports-actions">
+                <button class="action-button" type="button" id="refresh-reports">刷新</button>
+              </div>
+            </div>
+
+            <p class="reports-note">
+              点击某条历史记录，可直接回填结果到当前页面。当前是本地实例共享历史。
+            </p>
+
+            <div class="report-list" id="recent-reports">
+              <div class="report-list-empty">暂无历史报告。先生成一次星盘后，这里会显示最近结果。</div>
+            </div>
+          </aside>
         </div>
       </section>
 
       <section id="chart-section" class="section">
         <div class="section-header">
           <span class="section-kicker">Chart</span>
-          <h2 class="section-title">星盘可视化</h2>
+          <h2 class="section-title">我的星盘</h2>
           <p class="section-text">
             生成完成后，你可以在这里查看本命盘图形。
           </p>
         </div>
 
         <div class="surface chart-stage">
-          <div class="chart-copy">
-            <h3>星盘细节</h3>
-            <p>查看宫位、黄道、行星缩写、ASC / MC 标记与相位连线。</p>
-            <p>生成后可继续向下浏览完整解读内容。</p>
+          <div class="chart-copy chart-copy-compact">
+            <h3>我的星盘</h3>
+            <p>宫位、黄道、ASC / MC 与相位会在这里集中显示。</p>
           </div>
 
           <div class="chart-frame glow-track">
@@ -1087,15 +1255,15 @@
       <section id="reading-section" class="section">
         <div class="section-header">
           <span class="section-kicker">Reading</span>
-          <h2 class="section-title">结构化解读</h2>
+          <h2 class="section-title">本命解读</h2>
           <p class="section-text">
-            综合摘要、四大主题、依据链和质量指标都会集中展示在这里。
+            四大主题、依据链和质量指标会在这里集中展开。
           </p>
         </div>
 
         <div class="reading-stack">
-          <section class="surface">
-            <h3>综合摘要</h3>
+          <section class="surface summary-card summary-card-compact">
+            <h3>本命解读</h3>
             <p class="summary-main" id="card-summary">-</p>
             <p class="summary-tip" id="card-reminder">-</p>
           </section>
@@ -1211,7 +1379,12 @@
     const chartWrap = document.querySelector('#chart-wrap');
     const evidenceList = document.querySelector('#evidence-list');
     const submitButton = document.querySelector('#submit-button');
+    const recentReportsEl = document.querySelector('#recent-reports');
+    const refreshReportsButton = document.querySelector('#refresh-reports');
+    const copyReportLinkButton = document.querySelector('#copy-report-link');
     let latest = null;
+    let activeReportID = null;
+    const reportQueryParam = 'report';
 
     const themeLabels = {
       love: '爱情',
@@ -1242,6 +1415,112 @@
       }
       data.calendar = 'gregorian';
       return data;
+    }
+
+    function updateFormFromResponse(resp) {
+      if (!resp || !resp.meta || !resp.meta.input) return;
+      const input = resp.meta.input;
+      form.birth_date.value = input.birth_date || '';
+      form.birth_time.value = input.birth_time || '';
+      if (form.birth_province) {
+        form.birth_province.value = input.birth_province || '';
+      }
+      form.birth_country.value = input.birth_country || '中国';
+      form.timezone.value = input.timezone || '';
+      if (form.house_system) {
+        form.house_system.value = input.house_system || 'placidus';
+      }
+      if (form.zodiac_type) {
+        form.zodiac_type.value = input.zodiac_type || 'tropical';
+      }
+      if (form.language) {
+        form.language.value = input.language || 'zh-CN';
+      }
+    }
+
+    function formatReportDate(value) {
+      if (!value) return '-';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return value;
+      return new Intl.DateTimeFormat('zh-CN', {
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      }).format(date);
+    }
+
+    function buildReportURL(reportID) {
+      const url = new URL(window.location.href);
+      if (reportID) {
+        url.searchParams.set(reportQueryParam, reportID);
+      } else {
+        url.searchParams.delete(reportQueryParam);
+      }
+      return url;
+    }
+
+    function syncReportURL(reportID) {
+      const url = buildReportURL(reportID);
+      window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+    }
+
+    function renderRecentReports(items = []) {
+      if (!Array.isArray(items) || items.length === 0) {
+        recentReportsEl.innerHTML = '<div class="report-list-empty">暂无历史报告。先生成一次星盘后，这里会显示最近结果。</div>';
+        return;
+      }
+
+      recentReportsEl.innerHTML = items.map((item) => {
+        const activeClass = item.id === activeReportID ? ' is-active' : '';
+        const approximate = item.approximate ? '<span class="report-badge">近似时间</span>' : '<span class="report-badge">精确时间</span>';
+        const confidence = Number.isFinite(item.confidence) ? `${(item.confidence * 100).toFixed(0)}%` : '-';
+        return `
+          <button class="report-item${activeClass}" type="button" data-report-id="${escapeHTML(item.id)}">
+            <div class="report-item-title">
+              <strong>${escapeHTML(item.birth_city || '未知地点')}</strong>
+              <span>${escapeHTML(item.birth_date || '-')}</span>
+            </div>
+            <div class="report-item-meta">
+              <span>${escapeHTML(item.birth_country || '-')}</span>
+              <span>${formatReportDate(item.created_at)}</span>
+            </div>
+            <div class="report-item-foot">
+              ${approximate}
+              <span>置信度 ${confidence}</span>
+            </div>
+          </button>
+        `;
+      }).join('');
+    }
+
+    async function fetchRecentReports() {
+      const res = await fetch('/api/v1/reports');
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || '加载历史报告失败');
+      }
+      renderRecentReports(data.items || []);
+    }
+
+    async function loadReport(reportID) {
+      if (!reportID) return;
+      const res = await fetch(`/api/v1/reports/${encodeURIComponent(reportID)}`);
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || '加载报告失败');
+      }
+      activeReportID = data.report_id || reportID;
+      render(data);
+      await fetchRecentReports();
+    }
+
+    function loadReportFromQuery() {
+      const reportID = new URLSearchParams(window.location.search).get(reportQueryParam);
+      if (!reportID) {
+        return Promise.resolve(false);
+      }
+      return loadReport(reportID).then(() => true);
     }
 
     function isValidBirthDate(value) {
@@ -1490,7 +1769,10 @@
 
     function render(resp) {
       latest = resp;
+      activeReportID = resp.report_id || activeReportID;
+      syncReportURL(activeReportID);
       drawChart(resp.chart);
+      updateFormFromResponse(resp);
 
       document.querySelector('#card-personality').textContent = resp.reading.personality || '-';
       document.querySelector('#card-relationship').textContent = resp.reading.relationship || '-';
@@ -1512,7 +1794,8 @@
       document.querySelector('#metric-consistency').textContent = Number.isFinite(quality.consistency_score) ? quality.consistency_score.toFixed(2) : '-';
 
       const warnings = (resp.meta.warnings || []).join('；');
-      metaEl.textContent = `置信度 ${resp.meta.confidence.toFixed(2)} | ${resp.meta.confidence_note}${warnings ? ` | ${warnings}` : ''}`;
+      const reportIDText = resp.report_id ? ` | Report ${resp.report_id}` : '';
+      metaEl.textContent = `置信度 ${resp.meta.confidence.toFixed(2)} | ${resp.meta.confidence_note}${warnings ? ` | ${warnings}` : ''}${reportIDText}`;
       document.querySelector('#chart-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
@@ -1567,6 +1850,7 @@
           return;
         }
         render(data);
+        await fetchRecentReports();
       } catch (err) {
         setFeedback(err.message || '网络错误');
       } finally {
@@ -1590,6 +1874,15 @@
       URL.revokeObjectURL(url);
     });
 
+    document.querySelector('#download-pdf').addEventListener('click', () => {
+      if (!latest || !latest.report_id) {
+        setFeedback('请先生成报告或从历史记录中加载一份报告');
+        return;
+      }
+
+      window.location.href = `/api/v1/reports/${encodeURIComponent(latest.report_id)}/pdf`;
+    });
+
     document.querySelector('#copy-report').addEventListener('click', async () => {
       if (!latest) return;
       try {
@@ -1597,6 +1890,25 @@
         setFeedback('文本报告已复制', 'success');
         setTimeout(() => {
           setFeedback('');
+        }, 1200);
+      } catch (_) {
+        setFeedback('复制失败');
+      }
+    });
+
+    copyReportLinkButton.addEventListener('click', async () => {
+      if (!latest || !latest.report_id) {
+        setFeedback('请先生成报告或从历史记录中加载一份报告');
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(buildReportURL(latest.report_id).toString());
+        setFeedback('详情链接已复制', 'success');
+        setTimeout(() => {
+          if (errorEl.dataset.state === 'success') {
+            setFeedback('');
+          }
         }, 1200);
       } catch (_) {
         setFeedback('复制失败');
@@ -1611,7 +1923,48 @@
       form.timezone.value = '';
     });
 
-    bindGlowTracking();
+    refreshReportsButton.addEventListener('click', async () => {
+      try {
+        await fetchRecentReports();
+        setFeedback('历史报告已刷新', 'success');
+        setTimeout(() => {
+          if (errorEl.dataset.state === 'success') {
+            setFeedback('');
+          }
+        }, 1200);
+      } catch (err) {
+        setFeedback(err.message || '刷新失败');
+      }
+    });
+
+    recentReportsEl.addEventListener('click', async (event) => {
+      const button = event.target.closest('[data-report-id]');
+      if (!button) return;
+
+      try {
+        setFeedback('');
+        await loadReport(button.dataset.reportId);
+      } catch (err) {
+        setFeedback(err.message || '加载报告失败');
+      }
+    });
+
+    async function initPage() {
+      bindGlowTracking();
+      try {
+        await fetchRecentReports();
+      } catch (_) {
+        renderRecentReports([]);
+      }
+
+      try {
+        await loadReportFromQuery();
+      } catch (err) {
+        setFeedback(err.message || '加载报告失败');
+      }
+    }
+
+    initPage();
   </script>
 </body>
 </html>

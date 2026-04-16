@@ -233,7 +233,7 @@ func TestIndexPageUsesMonochromeProductTokens(t *testing.T) {
 	}
 }
 
-func TestIndexPreviewCPreservesStructureWithMysticTokens(t *testing.T) {
+func TestIndexPreviewCPreservesStructureWithLuxuryGoldTokens(t *testing.T) {
 	previewPath := filepath.Join("..", "..", "web", "index.preview-c.html")
 	content, err := os.ReadFile(previewPath)
 	if err != nil {
@@ -248,9 +248,11 @@ func TestIndexPreviewCPreservesStructureWithMysticTokens(t *testing.T) {
 		`id="reading-section"`,
 		`id="recent-reports"`,
 		`function loadReportFromQuery()`,
-		`--accent: #5f4aa7;`,
-		`--accent-soft: rgba(95, 74, 167, 0.14);`,
-		`radial-gradient(circle at top, rgba(95, 74, 167, 0.18), transparent 34%)`,
+		`--accent: #b89a5f;`,
+		`--accent-soft: rgba(184, 154, 95, 0.14);`,
+		`--navy-soft: rgba(18, 27, 43, 0.42);`,
+		`radial-gradient(circle at top, rgba(18, 27, 43, 0.42), transparent 34%)`,
+		`background: linear-gradient(135deg, #b89a5f, #8b7446);`,
 	}
 
 	for _, marker := range requiredMarkers {

@@ -9,17 +9,18 @@
   <style>
     :root {
       --bg: #000000;
-      --surface: rgba(255, 255, 255, 0.035);
-      --surface-strong: rgba(95, 74, 167, 0.1);
-      --surface-soft: rgba(95, 74, 167, 0.05);
-      --border: rgba(123, 106, 176, 0.18);
-      --border-strong: rgba(123, 106, 176, 0.28);
-      --text: rgba(255, 255, 255, 0.96);
-      --text-muted: rgba(221, 214, 240, 0.68);
-      --text-soft: rgba(180, 168, 214, 0.5);
-      --shadow: 0 24px 72px rgba(12, 3, 28, 0.56);
-      --accent: #5f4aa7;
-      --accent-soft: rgba(95, 74, 167, 0.14);
+      --surface: rgba(248, 244, 236, 0.035);
+      --surface-strong: rgba(184, 154, 95, 0.08);
+      --surface-soft: rgba(18, 27, 43, 0.12);
+      --border: rgba(184, 154, 95, 0.16);
+      --border-strong: rgba(184, 154, 95, 0.28);
+      --text: rgba(247, 243, 235, 0.96);
+      --text-muted: rgba(214, 207, 194, 0.7);
+      --text-soft: rgba(173, 166, 154, 0.5);
+      --shadow: 0 24px 72px rgba(0, 0, 0, 0.58);
+      --accent: #b89a5f;
+      --accent-soft: rgba(184, 154, 95, 0.14);
+      --navy-soft: rgba(18, 27, 43, 0.42);
       --section-pad-x: clamp(24px, 8vw, 120px);
       --radius-xl: 32px;
       --radius-lg: 24px;
@@ -79,9 +80,9 @@
     .background-fade {
       z-index: 2;
       background:
-        radial-gradient(circle at top, rgba(95, 74, 167, 0.18), transparent 34%),
-        radial-gradient(circle at 72% 18%, rgba(55, 31, 102, 0.14), transparent 24%),
-        linear-gradient(180deg, rgba(0, 0, 0, 0.18) 0%, rgba(11, 2, 24, 0.66) 44%, rgba(0, 0, 0, 0.92) 100%);
+        radial-gradient(circle at top, rgba(18, 27, 43, 0.42), transparent 34%),
+        radial-gradient(circle at 74% 16%, rgba(184, 154, 95, 0.08), transparent 20%),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.14) 0%, rgba(7, 11, 19, 0.68) 44%, rgba(0, 0, 0, 0.94) 100%);
     }
 
     .page-layer {
@@ -99,8 +100,8 @@
       gap: 24px;
       padding: 20px var(--section-pad-x);
       backdrop-filter: blur(18px);
-      background: linear-gradient(180deg, rgba(7, 0, 18, 0.82), rgba(0, 0, 0, 0.2));
-      border-bottom: 1px solid rgba(95, 74, 167, 0.14);
+      background: linear-gradient(180deg, rgba(6, 8, 12, 0.88), rgba(0, 0, 0, 0.34));
+      border-bottom: 1px solid rgba(184, 154, 95, 0.12);
     }
 
     .brand-row {
@@ -131,7 +132,7 @@
       display: inline-flex;
       align-items: center;
       gap: 14px;
-      color: rgba(255, 255, 255, 0.92);
+      color: rgba(231, 224, 212, 0.82);
       font-size: 14px;
       font-weight: 500;
       white-space: nowrap;
@@ -139,7 +140,7 @@
     }
 
     .nav-link:hover {
-      color: #dacfff;
+      color: #f1dec0;
     }
 
     .nav-arrow {
@@ -160,9 +161,9 @@
       justify-content: center;
       padding: 0.6px;
       border-radius: 999px;
-      border: 1px solid rgba(123, 106, 176, 0.24);
-      background: rgba(95, 74, 167, 0.08);
-      box-shadow: 0 18px 45px rgba(16, 0, 38, 0.36);
+      border: 1px solid rgba(184, 154, 95, 0.18);
+      background: rgba(248, 244, 236, 0.02);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.34);
       overflow: hidden;
       cursor: pointer;
       transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
@@ -176,16 +177,16 @@
       width: 80%;
       height: 28px;
       border-radius: 999px;
-      background: linear-gradient(180deg, rgba(141, 123, 196, 0.34), rgba(95, 74, 167, 0));
-      filter: blur(10px);
-      opacity: 0.6;
+      background: linear-gradient(180deg, rgba(184, 154, 95, 0.18), rgba(184, 154, 95, 0));
+      filter: blur(12px);
+      opacity: 0.4;
       pointer-events: none;
     }
 
     .pill-button:hover {
       transform: translateY(-1px);
-      box-shadow: 0 20px 52px rgba(0, 0, 0, 0.34);
-      border-color: rgba(160, 145, 201, 0.72);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
+      border-color: rgba(184, 154, 95, 0.34);
     }
 
     .pill-button:focus-visible {
@@ -208,17 +209,17 @@
     }
 
     .pill-button.is-dark .pill-core {
-      color: #f7f3ff;
-      background: rgba(14, 2, 30, 0.94);
+      color: #f7f3eb;
+      background: rgba(10, 12, 16, 0.94);
     }
 
     .pill-button.is-light {
-      background: rgba(95, 74, 167, 0.72);
+      background: rgba(184, 154, 95, 0.18);
     }
 
     .pill-button.is-light .pill-core {
-      color: #ffffff;
-      background: linear-gradient(135deg, #6f5aa9, #4c3786);
+      color: #17130d;
+      background: linear-gradient(135deg, #b89a5f, #8b7446);
     }
 
     .site-main {
@@ -280,7 +281,7 @@
       font-weight: 500;
       line-height: 1.28;
       letter-spacing: -0.03em;
-      background: linear-gradient(144.5deg, rgba(255, 255, 255, 1) 20%, rgba(210, 202, 233, 0.84) 64%, rgba(95, 74, 167, 0.38) 118%);
+      background: linear-gradient(144.5deg, rgba(247, 243, 235, 1) 20%, rgba(225, 216, 198, 0.9) 64%, rgba(184, 154, 95, 0.56) 118%);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
@@ -291,7 +292,7 @@
       max-width: 680px;
       font-size: 15px;
       line-height: 1.75;
-      color: rgba(255, 255, 255, 0.7);
+      color: rgba(214, 207, 194, 0.72);
     }
 
     .section {
@@ -309,7 +310,7 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      color: rgba(255, 255, 255, 0.6);
+      color: rgba(196, 179, 145, 0.74);
       font-size: 12px;
       letter-spacing: 0.12em;
       text-transform: uppercase;
@@ -319,7 +320,7 @@
       content: "";
       width: 32px;
       height: 1px;
-      background: rgba(255, 255, 255, 0.36);
+      background: rgba(184, 154, 95, 0.34);
     }
 
     .section-title {
@@ -344,7 +345,7 @@
     .evidence-group {
       position: relative;
       overflow: hidden;
-      background: linear-gradient(180deg, rgba(95, 74, 167, 0.08), rgba(255, 255, 255, 0.025));
+      background: linear-gradient(180deg, rgba(17, 21, 28, 0.92), rgba(8, 10, 14, 0.94));
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
       backdrop-filter: blur(18px);
@@ -360,7 +361,7 @@
       position: absolute;
       inset: 0;
       pointer-events: none;
-      background: linear-gradient(180deg, rgba(150, 132, 204, 0.12), rgba(255, 255, 255, 0));
+      background: linear-gradient(180deg, rgba(184, 154, 95, 0.08), rgba(248, 244, 236, 0));
       opacity: 0.68;
     }
 
@@ -385,9 +386,9 @@
       border-radius: inherit;
       background: radial-gradient(
         220px circle at var(--mx) var(--my),
-        rgba(95, 74, 167, 0.16) 0%,
-        rgba(95, 74, 167, 0.09) 24%,
-        rgba(255, 255, 255, 0.02) 44%,
+        rgba(184, 154, 95, 0.12) 0%,
+        rgba(18, 27, 43, 0.16) 24%,
+        rgba(248, 244, 236, 0.015) 44%,
         rgba(255, 255, 255, 0) 66%
       );
       opacity: 0;
@@ -399,8 +400,8 @@
     .glow-track.is-hover {
       border-color: var(--border-strong);
       box-shadow:
-        0 0 0 1px rgba(123, 106, 176, 0.1) inset,
-        0 24px 70px rgba(16, 0, 38, 0.48);
+        0 0 0 1px rgba(184, 154, 95, 0.08) inset,
+        0 24px 70px rgba(0, 0, 0, 0.5);
     }
 
     .glow-track.is-hover::before {
@@ -457,7 +458,7 @@
     .feature-list li {
       padding-top: 14px;
       border-top: 1px solid rgba(255, 255, 255, 0.08);
-      color: rgba(255, 255, 255, 0.8);
+      color: rgba(228, 221, 209, 0.82);
       line-height: 1.65;
       font-size: 14px;
     }
@@ -495,30 +496,30 @@
       min-height: 48px;
       padding: 12px 14px;
       border-radius: 14px;
-      border: 1px solid rgba(123, 106, 176, 0.18);
-      background: rgba(14, 6, 24, 0.76);
-      color: #ffffff;
+      border: 1px solid rgba(184, 154, 95, 0.14);
+      background: rgba(10, 13, 18, 0.84);
+      color: #f7f3eb;
       transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
       appearance: none;
     }
 
     select {
-      background-color: rgba(14, 6, 24, 0.96);
+      background-color: rgba(10, 13, 18, 0.96);
       color: #f5f7fb;
-      border: 1px solid rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(184, 154, 95, 0.14);
       box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
       color-scheme: dark;
     }
 
     select option {
-      background: #140d1f;
-      color: #f5f7fb;
+      background: #0f141b;
+      color: #f7f3eb;
     }
 
     select option:checked,
     select option:hover {
-      background: #241633;
-      color: #ffffff;
+      background: #17202b;
+      color: #f7f3eb;
     }
 
     input::placeholder {
@@ -540,9 +541,9 @@
     input:focus,
     select:focus {
       outline: none;
-      border-color: rgba(123, 106, 176, 0.38);
-      background: rgba(20, 10, 32, 0.92);
-      box-shadow: 0 0 0 3px rgba(95, 74, 167, 0.12);
+      border-color: rgba(184, 154, 95, 0.34);
+      background: rgba(12, 16, 22, 0.92);
+      box-shadow: 0 0 0 3px rgba(184, 154, 95, 0.08);
     }
 
     .actions {
@@ -555,9 +556,9 @@
       min-height: 50px;
       padding: 12px 18px;
       border-radius: 999px;
-      border: 1px solid rgba(123, 106, 176, 0.18);
-      background: rgba(95, 74, 167, 0.08);
-      color: #ffffff;
+      border: 1px solid rgba(184, 154, 95, 0.14);
+      background: rgba(248, 244, 236, 0.02);
+      color: #f7f3eb;
       font-size: 14px;
       font-weight: 500;
       cursor: pointer;
@@ -566,8 +567,8 @@
 
     .action-button:hover {
       transform: translateY(-1px);
-      border-color: rgba(150, 132, 204, 0.3);
-      background: rgba(95, 74, 167, 0.12);
+      border-color: rgba(184, 154, 95, 0.26);
+      background: rgba(248, 244, 236, 0.05);
     }
 
     .action-button:disabled {
@@ -577,10 +578,9 @@
     }
 
     .action-button.primary {
-      background: linear-gradient(135deg, #6f5aa9, #4c3786);
-      color: #ffffff;
-      border-color: rgba(150, 132, 204, 0.34);
-      border-color: rgba(255, 255, 255, 0.9);
+      background: linear-gradient(135deg, #b89a5f, #8b7446);
+      color: #17130d;
+      border-color: rgba(184, 154, 95, 0.3);
     }
 
     .feedback {
@@ -591,7 +591,7 @@
     }
 
     .feedback[data-state="success"] {
-      color: rgba(202, 255, 220, 0.92);
+      color: rgba(225, 216, 198, 0.92);
     }
 
     .meta {
@@ -653,23 +653,23 @@
       padding: 16px;
       text-align: left;
       border-radius: 18px;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      background: rgba(255, 255, 255, 0.04);
-      color: #ffffff;
+      border: 1px solid rgba(184, 154, 95, 0.1);
+      background: rgba(248, 244, 236, 0.02);
+      color: #f7f3eb;
       cursor: pointer;
       transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
     }
 
     .report-item:hover {
       transform: translateY(-1px);
-      border-color: rgba(255, 255, 255, 0.28);
-      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(184, 154, 95, 0.22);
+      background: rgba(248, 244, 236, 0.05);
     }
 
     .report-item.is-active {
-      border-color: rgba(255, 255, 255, 0.44);
-      background: rgba(255, 255, 255, 0.12);
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+      border-color: rgba(184, 154, 95, 0.3);
+      background: rgba(184, 154, 95, 0.08);
+      box-shadow: inset 0 0 0 1px rgba(184, 154, 95, 0.06);
     }
 
     .report-item-title,

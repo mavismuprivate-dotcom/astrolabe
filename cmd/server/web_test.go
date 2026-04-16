@@ -165,7 +165,7 @@ func TestIndexPageUsesReadableUnifiedSelectStyles(t *testing.T) {
 	html := string(content)
 	requiredMarkers := []string{
 		`select {`,
-		`background-color: rgba(12, 12, 16, 0.96);`,
+		`background-color: rgba(8, 8, 10, 0.96);`,
 		`color: #f5f7fb;`,
 		`border: 1px solid rgba(255, 255, 255, 0.16);`,
 		`box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);`,
@@ -203,6 +203,59 @@ func TestChartSectionIncludesPlanetPlacementList(t *testing.T) {
 	for _, marker := range requiredMarkers {
 		if !strings.Contains(html, marker) {
 			t.Fatalf("expected planet placement marker %q", marker)
+		}
+	}
+}
+
+func TestIndexPageUsesMonochromeProductTokens(t *testing.T) {
+	indexPath := filepath.Join("..", "..", "web", "index.html")
+	content, err := os.ReadFile(indexPath)
+	if err != nil {
+		t.Fatalf("read index.html: %v", err)
+	}
+
+	html := string(content)
+	requiredMarkers := []string{
+		`--surface: rgba(248, 248, 248, 0.04);`,
+		`--surface-strong: rgba(255, 255, 255, 0.08);`,
+		`--surface-soft: rgba(214, 214, 214, 0.03);`,
+		`--shadow: 0 22px 64px rgba(0, 0, 0, 0.5);`,
+		`--section-pad-x: clamp(20px, 6vw, 96px);`,
+		`background: rgba(0, 0, 0, 0.82);`,
+		`letter-spacing: 0.24em;`,
+		`background: linear-gradient(135deg, #d7dbe2, #ffffff);`,
+	}
+
+	for _, marker := range requiredMarkers {
+		if !strings.Contains(html, marker) {
+			t.Fatalf("expected monochrome theme marker %q", marker)
+		}
+	}
+}
+
+func TestIndexPreviewCPreservesStructureWithMysticTokens(t *testing.T) {
+	previewPath := filepath.Join("..", "..", "web", "index.preview-c.html")
+	content, err := os.ReadFile(previewPath)
+	if err != nil {
+		t.Fatalf("read index.preview-c.html: %v", err)
+	}
+
+	html := string(content)
+	requiredMarkers := []string{
+		`id="bg-video"`,
+		`id="generator"`,
+		`id="chart-section"`,
+		`id="reading-section"`,
+		`id="recent-reports"`,
+		`function loadReportFromQuery()`,
+		`--accent: #5f4aa7;`,
+		`--accent-soft: rgba(95, 74, 167, 0.14);`,
+		`radial-gradient(circle at top, rgba(95, 74, 167, 0.18), transparent 34%)`,
+	}
+
+	for _, marker := range requiredMarkers {
+		if !strings.Contains(html, marker) {
+			t.Fatalf("expected preview-c marker %q", marker)
 		}
 	}
 }

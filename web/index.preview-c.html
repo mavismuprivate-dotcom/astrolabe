@@ -552,6 +552,29 @@
       gap: 12px;
     }
 
+    .field-hidden,
+    .action-hidden {
+      display: none !important;
+    }
+
+    .form-defaults {
+      display: grid;
+      justify-items: end;
+      gap: 6px;
+      margin-top: -2px;
+      color: var(--text-soft);
+      font-size: 12px;
+      line-height: 1.6;
+      text-align: right;
+    }
+
+    .action-button[disabled][data-vip-locked="true"] {
+      cursor: not-allowed;
+      opacity: 0.52;
+      border-style: dashed;
+      transform: none;
+    }
+
     .action-button {
       min-height: 50px;
       padding: 12px 18px;
@@ -1234,13 +1257,13 @@
                   <label>时区（可空）</label>
                   <input name="timezone" placeholder="默认按省份自动推断" />
                 </div>
-                <div class="field">
+                <div class="field field-hidden">
                   <label>宫位系统</label>
                   <select name="house_system">
                     <option value="placidus">placidus</option>
                   </select>
                 </div>
-                <div class="field">
+                <div class="field field-hidden">
                   <label>黄道类型</label>
                   <select name="zodiac_type">
                     <option value="tropical">tropical</option>
@@ -1254,19 +1277,24 @@
                 </div>
               </div>
 
-              <div class="actions">
-                <button id="submit-button" class="action-button primary" type="submit" data-idle-text="生成星盘" data-loading-text="生成中...">生成星盘</button>
-                <button class="action-button" type="button" id="download-json">下载 JSON</button>
+              <div class="form-defaults">
+                <span>默认宫位系统：Placidus</span>
+                <span>默认黄道类型：Tropical</span>
               </div>
 
               <div class="actions">
-                <button class="action-button" type="button" id="download-pdf">下载 PDF</button>
-                <button class="action-button" type="button" id="copy-report">复制文本报告</button>
+                <button id="submit-button" class="action-button primary" type="submit" data-idle-text="生成星盘" data-loading-text="生成中...">生成星盘</button>
+                <button class="action-button" type="button" id="download-json" disabled data-vip-locked="true">下载 JSON VIP</button>
+              </div>
+
+              <div class="actions">
+                <button class="action-button" type="button" id="download-pdf" disabled data-vip-locked="true">下载 PDF VIP</button>
+                <button class="action-button" type="button" id="copy-report" disabled data-vip-locked="true">复制文本报告 VIP</button>
                 <button class="action-button" type="button" id="copy-report-link">复制详情链接</button>
               </div>
 
               <div class="actions">
-                <button class="action-button" type="button" id="fill-sample">填充示例</button>
+                <button class="action-button action-hidden" type="button" id="fill-sample">填充示例</button>
                 <span></span>
               </div>
             </form>

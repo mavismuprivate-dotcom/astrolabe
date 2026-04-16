@@ -261,3 +261,65 @@ func TestIndexPreviewCPreservesStructureWithLuxuryGoldTokens(t *testing.T) {
 		}
 	}
 }
+
+func TestIndexPageUsesDefaultConfigSummaryAndVipLocks(t *testing.T) {
+	indexPath := filepath.Join("..", "..", "web", "index.html")
+	content, err := os.ReadFile(indexPath)
+	if err != nil {
+		t.Fatalf("read index.html: %v", err)
+	}
+
+	html := string(content)
+	requiredMarkers := []string{
+		`class="field field-hidden"`,
+		`class="form-defaults"`,
+		`默认宫位系统：Placidus`,
+		`默认黄道类型：Tropical`,
+		`id="download-json"`,
+		`id="download-pdf"`,
+		`id="copy-report"`,
+		`disabled data-vip-locked="true"`,
+		`下载 JSON VIP`,
+		`下载 PDF VIP`,
+		`复制文本报告 VIP`,
+		`id="fill-sample"`,
+		`action-hidden`,
+	}
+
+	for _, marker := range requiredMarkers {
+		if !strings.Contains(html, marker) {
+			t.Fatalf("expected default/vip marker %q", marker)
+		}
+	}
+}
+
+func TestIndexPreviewCUsesDefaultConfigSummaryAndVipLocks(t *testing.T) {
+	previewPath := filepath.Join("..", "..", "web", "index.preview-c.html")
+	content, err := os.ReadFile(previewPath)
+	if err != nil {
+		t.Fatalf("read index.preview-c.html: %v", err)
+	}
+
+	html := string(content)
+	requiredMarkers := []string{
+		`class="field field-hidden"`,
+		`class="form-defaults"`,
+		`默认宫位系统：Placidus`,
+		`默认黄道类型：Tropical`,
+		`id="download-json"`,
+		`id="download-pdf"`,
+		`id="copy-report"`,
+		`disabled data-vip-locked="true"`,
+		`下载 JSON VIP`,
+		`下载 PDF VIP`,
+		`复制文本报告 VIP`,
+		`id="fill-sample"`,
+		`action-hidden`,
+	}
+
+	for _, marker := range requiredMarkers {
+		if !strings.Contains(html, marker) {
+			t.Fatalf("expected preview default/vip marker %q", marker)
+		}
+	}
+}

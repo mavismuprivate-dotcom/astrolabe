@@ -3,8 +3,6 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
-	"path/filepath"
 
 	"astrolabe/internal/api"
 	"astrolabe/internal/astrology"
@@ -12,15 +10,15 @@ import (
 )
 
 func main() {
+	cfg, err := loadConfigFromEnv()
+	if err != nil {
+		log.Fatalf("invalid runtime configuration: %v", err)
+	}
+
 	resolver := astrology.NewCityResolver()
 	svc := astrology.NewService(resolver)
 
-	dbPath := os.Getenv("ASTROLABE_DB_PATH")
-	if dbPath == "" {
-		dbPath = filepath.Join("data", "astrolabe.db")
-	}
-
-	reportStore, err := storage.NewSQLiteStore(dbPath)
+	reportStore, err := storage.NewSQLiteStore(cfg.DBPath)
 	if err != nil {
 		log.Fatalf("failed to initialize report store: %v", err)
 	}
@@ -37,14 +35,10 @@ func main() {
 	mux.Handle("/healthz", apiHandler)
 	mux.Handle("/", http.FileServer(http.Dir("web")))
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-
-	addr := ":" + port
+	logger := log.New(log.Writer(), "", log.LstdFlags)
+	addr := ":" + cfg.Port
 	log.Printf("astrolabe server listening on %s", addr)
-	if err := http.ListenAndServe(addr, mux); err != nil {
+	if err := http.ListenAndServe(addr, withRuntimeMiddleware(logger, cfg.RateLimitPerMinute, mux)); err != nil {
 		log.Fatalf("server failed: %v", err)
 	}
 }

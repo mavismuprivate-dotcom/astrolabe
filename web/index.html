@@ -730,6 +730,47 @@
       max-width: 240px;
     }
 
+    .planet-placement-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.04);
+      min-height: 260px;
+      align-content: start;
+    }
+
+    .planet-placement-row {
+      display: grid;
+      gap: 4px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .planet-placement-row:last-child {
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    .planet-placement-line {
+      font-size: 13px;
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.88);
+      word-break: break-word;
+    }
+
+    .planet-placement-empty {
+      display: grid;
+      align-content: center;
+      height: 100%;
+      min-height: 228px;
+      color: rgba(255, 255, 255, 0.52);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
     .chart-frame {
       padding: 20px;
       border-radius: var(--radius-xl);
@@ -1261,6 +1302,9 @@
           <div class="chart-copy chart-copy-compact">
             <h3>我的星盘</h3>
             <p>宫位、黄道、ASC / MC 与相位会在这里集中显示。</p>
+            <div id="planet-placement-list" class="planet-placement-list">
+              <div class="planet-placement-empty">生成星盘后，这里会显示各行星落入的星座与宫位。</div>
+            </div>
           </div>
 
           <div class="chart-frame glow-track">
@@ -1401,9 +1445,37 @@
     const recentReportsEl = document.querySelector('#recent-reports');
     const refreshReportsButton = document.querySelector('#refresh-reports');
     const copyReportLinkButton = document.querySelector('#copy-report-link');
+    const planetPlacementListEl = document.querySelector('#planet-placement-list');
     let latest = null;
     let activeReportID = null;
     const reportQueryParam = 'report';
+    const planetPlacementOrder = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'];
+    const planetPlacementLabels = {
+      Sun: '太阳',
+      Moon: '月亮',
+      Mercury: '水星',
+      Venus: '金星',
+      Mars: '火星',
+      Jupiter: '木星',
+      Saturn: '土星',
+      Uranus: '天王星',
+      Neptune: '海王星',
+      Pluto: '冥王星'
+    };
+    const signLabels = {
+      Aries: '白羊座',
+      Taurus: '金牛座',
+      Gemini: '双子座',
+      Cancer: '巨蟹座',
+      Leo: '狮子座',
+      Virgo: '处女座',
+      Libra: '天秤座',
+      Scorpio: '天蝎座',
+      Sagittarius: '射手座',
+      Capricorn: '摩羯座',
+      Aquarius: '水瓶座',
+      Pisces: '双鱼座'
+    };
 
     const themeLabels = {
       love: '爱情',
@@ -1750,6 +1822,33 @@
       }[ch]));
     }
 
+    function renderPlanetPlacements(chart) {
+      if (!planetPlacementListEl) return;
+
+      const planets = chart && chart.planets ? chart.planets : null;
+      if (!planets) {
+        planetPlacementListEl.innerHTML = '<div class="planet-placement-empty">生成星盘后，这里会显示各行星落入的星座与宫位。</div>';
+        return;
+      }
+
+      const rows = planetPlacementOrder
+        .filter((name) => planets[name])
+        .map((name) => {
+          const planet = planets[name];
+          const planetLabel = `${planetPlacementLabels[name] || name}星座`;
+          const signLabel = signLabels[planet.sign] || planet.sign || '-';
+          const house = Number.isFinite(planet.house) ? `${planet.house}` : '-';
+          return `
+            <div class="planet-placement-row">
+              <div class="planet-placement-line">${escapeHTML(planetLabel)}&nbsp;&nbsp;&nbsp;${escapeHTML(signLabel)}&nbsp;&nbsp;&nbsp;${escapeHTML(`落入${house}宫`)}</div>
+            </div>
+          `;
+        })
+        .join('');
+
+      planetPlacementListEl.innerHTML = rows || '<div class="planet-placement-empty">当前星盘还没有可展示的行星落点。</div>';
+    }
+
     function renderEvidence(items) {
       if (!Array.isArray(items) || items.length === 0) {
         evidenceList.innerHTML = '<p class="summary-tip">暂无可展示依据。</p>';
@@ -1791,6 +1890,7 @@
       activeReportID = resp.report_id || activeReportID;
       syncReportURL(activeReportID);
       drawChart(resp.chart);
+      renderPlanetPlacements(resp.chart);
       updateFormFromResponse(resp);
 
       document.querySelector('#card-personality').textContent = resp.reading.personality || '-';

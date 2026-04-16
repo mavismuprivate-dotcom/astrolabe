@@ -180,3 +180,29 @@ func TestIndexPageUsesReadableUnifiedSelectStyles(t *testing.T) {
 		}
 	}
 }
+
+func TestChartSectionIncludesPlanetPlacementList(t *testing.T) {
+	indexPath := filepath.Join("..", "..", "web", "index.html")
+	content, err := os.ReadFile(indexPath)
+	if err != nil {
+		t.Fatalf("read index.html: %v", err)
+	}
+
+	html := string(content)
+	requiredMarkers := []string{
+		`id="planet-placement-list"`,
+		`class="planet-placement-list"`,
+		`class="planet-placement-empty"`,
+		`const planetPlacementLabels = {`,
+		`const signLabels = {`,
+		`function renderPlanetPlacements(chart)`,
+		`planet-placement-line`,
+		`planet.house`,
+	}
+
+	for _, marker := range requiredMarkers {
+		if !strings.Contains(html, marker) {
+			t.Fatalf("expected planet placement marker %q", marker)
+		}
+	}
+}

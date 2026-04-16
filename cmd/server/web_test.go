@@ -154,3 +154,29 @@ func TestReadingSectionUsesCompactNatalReadingCopy(t *testing.T) {
 		}
 	}
 }
+
+func TestIndexPageUsesReadableUnifiedSelectStyles(t *testing.T) {
+	indexPath := filepath.Join("..", "..", "web", "index.html")
+	content, err := os.ReadFile(indexPath)
+	if err != nil {
+		t.Fatalf("read index.html: %v", err)
+	}
+
+	html := string(content)
+	requiredMarkers := []string{
+		`select {`,
+		`background-color: rgba(12, 12, 16, 0.96);`,
+		`color: #f5f7fb;`,
+		`border: 1px solid rgba(255, 255, 255, 0.16);`,
+		`box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);`,
+		`select option {`,
+		`background: #101217;`,
+		`color: #f5f7fb;`,
+	}
+
+	for _, marker := range requiredMarkers {
+		if !strings.Contains(html, marker) {
+			t.Fatalf("expected unified select style marker %q", marker)
+		}
+	}
+}

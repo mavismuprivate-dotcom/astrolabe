@@ -546,10 +546,67 @@
       box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.04);
     }
 
+    .actions-group {
+      display: grid;
+      gap: 10px;
+    }
+
     .actions {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
+    }
+
+    .actions-free {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .actions-vip {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .actions-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .actions-heading-vip {
+      padding: 0 2px;
+    }
+
+    .actions-title {
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+    }
+
+    .actions-title-vip {
+      color: rgba(255, 255, 255, 0.82);
+    }
+
+    .vip-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03));
+      color: rgba(255, 255, 255, 0.84);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+    }
+
+    .vip-badge::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(214, 214, 214, 0.42));
+      box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.04);
     }
 
     .field-hidden,
@@ -570,13 +627,18 @@
 
     .action-button[disabled][data-vip-locked="true"] {
       cursor: not-allowed;
-      opacity: 0.52;
-      border-style: dashed;
+      opacity: 0.68;
+      border-style: solid;
+      border-color: rgba(255, 255, 255, 0.14);
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
+        rgba(255, 255, 255, 0.02);
+      color: rgba(255, 255, 255, 0.54);
       transform: none;
     }
 
     .action-button {
-      min-height: 50px;
+      min-height: 46px;
       padding: 12px 18px;
       border-radius: 999px;
       border: 1px solid rgba(255, 255, 255, 0.1);
@@ -1123,6 +1185,11 @@
         grid-template-columns: 1fr;
       }
 
+      .actions-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
       .intro-surface,
       .form-surface,
       .reports-surface,
@@ -1221,7 +1288,7 @@
             <ul class="feature-list">
               <li>支持出生日期、时间、省份与基础参数录入。</li>
               <li>生成星盘图形与综合解读，集中浏览关键信息。</li>
-              <li>可下载 JSON、复制文本报告，或使用示例信息快速体验。</li>
+              <li>可生成星盘、查看解读，并通过详情链接回访当前报告。</li>
             </ul>
           </aside>
 
@@ -1282,21 +1349,29 @@
                 <span>默认黄道类型：Tropical</span>
               </div>
 
-              <div class="actions">
-                <button id="submit-button" class="action-button primary" type="submit" data-idle-text="生成星盘" data-loading-text="生成中...">生成星盘</button>
-                <button class="action-button" type="button" id="download-json" disabled data-vip-locked="true">下载 JSON VIP</button>
+              <div class="actions-group actions-group-free">
+                <div class="actions-heading">
+                  <span class="actions-title">免费功能</span>
+                </div>
+                <div class="actions actions-free">
+                  <button id="submit-button" class="action-button primary" type="submit" data-idle-text="生成星盘" data-loading-text="生成中...">生成星盘</button>
+                  <button class="action-button" type="button" id="copy-report-link">复制详情链接</button>
+                </div>
               </div>
 
-              <div class="actions">
-                <button class="action-button" type="button" id="download-pdf" disabled data-vip-locked="true">下载 PDF VIP</button>
-                <button class="action-button" type="button" id="copy-report" disabled data-vip-locked="true">复制文本报告 VIP</button>
-                <button class="action-button" type="button" id="copy-report-link">复制详情链接</button>
+              <div class="actions-group actions-group-vip">
+                <div class="actions-heading actions-heading-vip">
+                  <span class="actions-title actions-title-vip">VIP会员专享</span>
+                  <span class="vip-badge">VIP会员专享</span>
+                </div>
+                <div class="actions actions-vip">
+                  <button class="action-button" type="button" id="download-json" disabled data-vip-locked="true">下载 JSON</button>
+                  <button class="action-button" type="button" id="download-pdf" disabled data-vip-locked="true">下载 PDF</button>
+                  <button class="action-button" type="button" id="copy-report" disabled data-vip-locked="true">复制文本报告</button>
+                </div>
               </div>
 
-              <div class="actions">
-                <button class="action-button action-hidden" type="button" id="fill-sample">填充示例</button>
-                <span></span>
-              </div>
+              <button class="action-button action-hidden" type="button" id="fill-sample">填充示例</button>
             </form>
 
             <p class="feedback" id="error"></p>

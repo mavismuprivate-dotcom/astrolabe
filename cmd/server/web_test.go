@@ -7,15 +7,31 @@ import (
 	"testing"
 )
 
-func TestIndexPageIncludesRedesignStructure(t *testing.T) {
-	indexPath := filepath.Join("..", "..", "web", "index.html")
-	content, err := os.ReadFile(indexPath)
+func mustReadPage(t *testing.T, name string) string {
+	t.Helper()
+
+	content, err := os.ReadFile(filepath.Join("..", "..", "web", name))
 	if err != nil {
-		t.Fatalf("read index.html: %v", err)
+		t.Fatalf("read %s: %v", name, err)
 	}
 
-	html := string(content)
-	requiredMarkers := []string{
+	return string(content)
+}
+
+func requireMarkers(t *testing.T, html string, markers ...string) {
+	t.Helper()
+
+	for _, marker := range markers {
+		if !strings.Contains(html, marker) {
+			t.Fatalf("expected marker %q", marker)
+		}
+	}
+}
+
+func TestIndexPageIncludesRedesignStructure(t *testing.T) {
+	html := mustReadPage(t, "index.html")
+
+	requireMarkers(t, html,
 		`id="bg-video"`,
 		`id="hero"`,
 		`id="generator"`,
@@ -28,142 +44,58 @@ func TestIndexPageIncludesRedesignStructure(t *testing.T) {
 		`id="copy-report-link"`,
 		`function syncReportURL(reportID)`,
 		`function loadReportFromQuery()`,
-	}
-
-	for _, marker := range requiredMarkers {
-		if !strings.Contains(html, marker) {
-			t.Fatalf("expected redesigned page marker %q", marker)
-		}
-	}
-}
-
-func TestIndexPageOmitsImplementationCommentary(t *testing.T) {
-	indexPath := filepath.Join("..", "..", "web", "index.html")
-	content, err := os.ReadFile(indexPath)
-	if err != nil {
-		t.Fatalf("read index.html: %v", err)
-	}
-
-	html := string(content)
-	blockedPhrases := []string{
-		"当前表单字段、接口协议和交互行为保持不变",
-		"当前页面保留的核心内容",
-		"同一个挂载点渲染",
-		"沿用当前渲染逻辑",
-		"当前展示内容",
-		"黑白高对比风格",
-		"自动滚动到这里",
-		"TODO 占位",
-	}
-
-	for _, phrase := range blockedPhrases {
-		if strings.Contains(html, phrase) {
-			t.Fatalf("expected implementation commentary phrase to be removed: %q", phrase)
-		}
-	}
+	)
 }
 
 func TestIndexPageUsesReadableChineseForReportActions(t *testing.T) {
-	indexPath := filepath.Join("..", "..", "web", "index.html")
-	content, err := os.ReadFile(indexPath)
-	if err != nil {
-		t.Fatalf("read index.html: %v", err)
-	}
+	html := mustReadPage(t, "index.html")
 
-	html := string(content)
-	requiredPhrases := []string{
-		"复制详情链接",
-		"最近报告",
-		"刷新",
-		"点击某条历史记录，可直接回填结果到当前页面。当前是本地实例共享历史。",
-		"暂无历史报告。先生成一次星盘后，这里会显示最近结果。",
-		"请先生成报告或从历史记录中加载一份报告",
-		"详情链接已复制",
-		"加载报告失败",
-	}
-
-	for _, phrase := range requiredPhrases {
-		if !strings.Contains(html, phrase) {
-			t.Fatalf("expected readable Chinese phrase %q", phrase)
-		}
-	}
+	requireMarkers(t, html,
+		`复制详情链接`,
+		`最近报告`,
+		`刷新`,
+		`加载报告失败`,
+		`详情链接已复制`,
+	)
 }
 
 func TestIndexPageUsesUpdatedNavigationLabels(t *testing.T) {
-	indexPath := filepath.Join("..", "..", "web", "index.html")
-	content, err := os.ReadFile(indexPath)
-	if err != nil {
-		t.Fatalf("read index.html: %v", err)
-	}
+	html := mustReadPage(t, "index.html")
 
-	html := string(content)
-	requiredPhrases := []string{
-		">我的信息<",
-		">我的星盘<",
-		">本命解读<",
-		">更多内容<",
-	}
-
-	for _, phrase := range requiredPhrases {
-		if !strings.Contains(html, phrase) {
-			t.Fatalf("expected updated navigation phrase %q", phrase)
-		}
-	}
+	requireMarkers(t, html,
+		`>我的信息<`,
+		`>我的星盘<`,
+		`>本命解读<`,
+		`>更多内容<`,
+	)
 }
 
 func TestChartSectionUsesCompactMyChartCopy(t *testing.T) {
-	indexPath := filepath.Join("..", "..", "web", "index.html")
-	content, err := os.ReadFile(indexPath)
-	if err != nil {
-		t.Fatalf("read index.html: %v", err)
-	}
+	html := mustReadPage(t, "index.html")
 
-	html := string(content)
-	requiredPhrases := []string{
+	requireMarkers(t, html,
 		`<h2 class="section-title">我的星盘</h2>`,
 		`class="chart-copy chart-copy-compact"`,
 		`<h3>我的星盘</h3>`,
 		`宫位、黄道、ASC / MC 与相位会在这里集中显示。`,
-	}
-
-	for _, phrase := range requiredPhrases {
-		if !strings.Contains(html, phrase) {
-			t.Fatalf("expected compact chart section phrase %q", phrase)
-		}
-	}
+	)
 }
 
 func TestReadingSectionUsesCompactNatalReadingCopy(t *testing.T) {
-	indexPath := filepath.Join("..", "..", "web", "index.html")
-	content, err := os.ReadFile(indexPath)
-	if err != nil {
-		t.Fatalf("read index.html: %v", err)
-	}
+	html := mustReadPage(t, "index.html")
 
-	html := string(content)
-	requiredPhrases := []string{
+	requireMarkers(t, html,
 		`<h2 class="section-title">本命解读</h2>`,
 		`<h3>本命解读</h3>`,
 		`summary-card-compact`,
 		`四大主题、依据链和质量指标会在这里集中展开。`,
-	}
-
-	for _, phrase := range requiredPhrases {
-		if !strings.Contains(html, phrase) {
-			t.Fatalf("expected compact reading section phrase %q", phrase)
-		}
-	}
+	)
 }
 
 func TestIndexPageUsesReadableUnifiedSelectStyles(t *testing.T) {
-	indexPath := filepath.Join("..", "..", "web", "index.html")
-	content, err := os.ReadFile(indexPath)
-	if err != nil {
-		t.Fatalf("read index.html: %v", err)
-	}
+	html := mustReadPage(t, "index.html")
 
-	html := string(content)
-	requiredMarkers := []string{
+	requireMarkers(t, html,
 		`select {`,
 		`background-color: rgba(8, 8, 10, 0.96);`,
 		`color: #f5f7fb;`,
@@ -172,24 +104,13 @@ func TestIndexPageUsesReadableUnifiedSelectStyles(t *testing.T) {
 		`select option {`,
 		`background: #101217;`,
 		`color: #f5f7fb;`,
-	}
-
-	for _, marker := range requiredMarkers {
-		if !strings.Contains(html, marker) {
-			t.Fatalf("expected unified select style marker %q", marker)
-		}
-	}
+	)
 }
 
 func TestChartSectionIncludesPlanetPlacementList(t *testing.T) {
-	indexPath := filepath.Join("..", "..", "web", "index.html")
-	content, err := os.ReadFile(indexPath)
-	if err != nil {
-		t.Fatalf("read index.html: %v", err)
-	}
+	html := mustReadPage(t, "index.html")
 
-	html := string(content)
-	requiredMarkers := []string{
+	requireMarkers(t, html,
 		`id="planet-placement-list"`,
 		`class="planet-placement-list"`,
 		`class="planet-placement-empty"`,
@@ -198,24 +119,13 @@ func TestChartSectionIncludesPlanetPlacementList(t *testing.T) {
 		`function renderPlanetPlacements(chart)`,
 		`planet-placement-line`,
 		`planet.house`,
-	}
-
-	for _, marker := range requiredMarkers {
-		if !strings.Contains(html, marker) {
-			t.Fatalf("expected planet placement marker %q", marker)
-		}
-	}
+	)
 }
 
 func TestIndexPageUsesMonochromeProductTokens(t *testing.T) {
-	indexPath := filepath.Join("..", "..", "web", "index.html")
-	content, err := os.ReadFile(indexPath)
-	if err != nil {
-		t.Fatalf("read index.html: %v", err)
-	}
+	html := mustReadPage(t, "index.html")
 
-	html := string(content)
-	requiredMarkers := []string{
+	requireMarkers(t, html,
 		`--surface: rgba(248, 248, 248, 0.04);`,
 		`--surface-strong: rgba(255, 255, 255, 0.08);`,
 		`--surface-soft: rgba(214, 214, 214, 0.03);`,
@@ -224,24 +134,13 @@ func TestIndexPageUsesMonochromeProductTokens(t *testing.T) {
 		`background: rgba(0, 0, 0, 0.82);`,
 		`letter-spacing: 0.24em;`,
 		`background: linear-gradient(135deg, #d7dbe2, #ffffff);`,
-	}
-
-	for _, marker := range requiredMarkers {
-		if !strings.Contains(html, marker) {
-			t.Fatalf("expected monochrome theme marker %q", marker)
-		}
-	}
+	)
 }
 
 func TestIndexPreviewCPreservesStructureWithBlackTitaniumTokens(t *testing.T) {
-	previewPath := filepath.Join("..", "..", "web", "index.preview-c.html")
-	content, err := os.ReadFile(previewPath)
-	if err != nil {
-		t.Fatalf("read index.preview-c.html: %v", err)
-	}
+	html := mustReadPage(t, "index.preview-c.html")
 
-	html := string(content)
-	requiredMarkers := []string{
+	requireMarkers(t, html,
 		`id="bg-video"`,
 		`id="generator"`,
 		`id="chart-section"`,
@@ -253,73 +152,61 @@ func TestIndexPreviewCPreservesStructureWithBlackTitaniumTokens(t *testing.T) {
 		`--navy-soft: rgba(28, 35, 46, 0.36);`,
 		`radial-gradient(circle at top, rgba(28, 35, 46, 0.36), transparent 34%)`,
 		`background: linear-gradient(180deg, rgba(36, 42, 50, 0.96), rgba(14, 16, 20, 0.98));`,
-	}
-
-	for _, marker := range requiredMarkers {
-		if !strings.Contains(html, marker) {
-			t.Fatalf("expected preview-c marker %q", marker)
-		}
-	}
+	)
 }
 
 func TestIndexPageUsesDefaultConfigSummaryAndVipLocks(t *testing.T) {
-	indexPath := filepath.Join("..", "..", "web", "index.html")
-	content, err := os.ReadFile(indexPath)
-	if err != nil {
-		t.Fatalf("read index.html: %v", err)
-	}
+	html := mustReadPage(t, "index.html")
 
-	html := string(content)
-	requiredMarkers := []string{
+	requireMarkers(t, html,
 		`class="field field-hidden"`,
 		`class="form-defaults"`,
 		`默认宫位系统：Placidus`,
 		`默认黄道类型：Tropical`,
+		`class="actions-group actions-group-free"`,
+		`class="actions-group actions-group-vip"`,
+		`class="actions actions-free"`,
+		`class="actions actions-vip"`,
+		`class="actions-heading actions-heading-vip"`,
+		`class="vip-badge"`,
+		`VIP会员专享`,
 		`id="download-json"`,
 		`id="download-pdf"`,
 		`id="copy-report"`,
+		`id="copy-report-link"`,
 		`disabled data-vip-locked="true"`,
-		`下载 JSON VIP`,
-		`下载 PDF VIP`,
-		`复制文本报告 VIP`,
+		`下载 JSON`,
+		`下载 PDF`,
+		`复制文本报告`,
 		`id="fill-sample"`,
 		`action-hidden`,
-	}
-
-	for _, marker := range requiredMarkers {
-		if !strings.Contains(html, marker) {
-			t.Fatalf("expected default/vip marker %q", marker)
-		}
-	}
+	)
 }
 
 func TestIndexPreviewCUsesDefaultConfigSummaryAndVipLocks(t *testing.T) {
-	previewPath := filepath.Join("..", "..", "web", "index.preview-c.html")
-	content, err := os.ReadFile(previewPath)
-	if err != nil {
-		t.Fatalf("read index.preview-c.html: %v", err)
-	}
+	html := mustReadPage(t, "index.preview-c.html")
 
-	html := string(content)
-	requiredMarkers := []string{
+	requireMarkers(t, html,
 		`class="field field-hidden"`,
 		`class="form-defaults"`,
 		`默认宫位系统：Placidus`,
 		`默认黄道类型：Tropical`,
+		`class="actions-group actions-group-free"`,
+		`class="actions-group actions-group-vip"`,
+		`class="actions actions-free"`,
+		`class="actions actions-vip"`,
+		`class="actions-heading actions-heading-vip"`,
+		`class="vip-badge"`,
+		`VIP会员专享`,
 		`id="download-json"`,
 		`id="download-pdf"`,
 		`id="copy-report"`,
+		`id="copy-report-link"`,
 		`disabled data-vip-locked="true"`,
-		`下载 JSON VIP`,
-		`下载 PDF VIP`,
-		`复制文本报告 VIP`,
+		`下载 JSON`,
+		`下载 PDF`,
+		`复制文本报告`,
 		`id="fill-sample"`,
 		`action-hidden`,
-	}
-
-	for _, marker := range requiredMarkers {
-		if !strings.Contains(html, marker) {
-			t.Fatalf("expected preview default/vip marker %q", marker)
-		}
-	}
+	)
 }

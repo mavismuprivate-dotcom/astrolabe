@@ -335,6 +335,14 @@
       color: var(--text-muted);
     }
 
+    .section-text-secondary {
+      margin: -4px 0 0;
+      max-width: 760px;
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text-soft);
+    }
+
     .surface,
     .theme-card,
     .metric,
@@ -406,7 +414,7 @@
 
     .generator-layout {
       display: grid;
-      grid-template-columns: minmax(240px, 0.72fr) minmax(0, 1.12fr) minmax(260px, 0.76fr);
+      grid-template-columns: minmax(0, 1.18fr) minmax(280px, 0.72fr);
       gap: 24px;
       align-items: start;
     }
@@ -1126,6 +1134,35 @@
       gap: 18px;
     }
 
+    .todo-header-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .vip-badge-roadmap {
+      border-color: rgba(255, 255, 255, 0.18);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+      color: rgba(255, 255, 255, 0.86);
+    }
+
+    .todo-card-vip {
+      display: grid;
+      gap: 14px;
+    }
+
+    .todo-card-vip::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto auto 0;
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0));
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
     .todo-tag {
       display: inline-flex;
       align-items: center;
@@ -1272,24 +1309,11 @@
           <span class="section-kicker">Generator</span>
           <h2 class="section-title">输入出生信息，生成星盘</h2>
           <p class="section-text">
-            填写出生日期、时间、省份与基础参数，开始生成你的本命盘结果。
+            填写你的出生日期、时间、省份与基础内容，获取你的本命盘说明书。
           </p>
         </div>
 
         <div class="generator-layout">
-          <aside class="surface intro-surface">
-            <div>
-              <h3>快速开始</h3>
-              <p>完成基础信息填写后，即可查看星盘图形和对应解读。</p>
-            </div>
-
-            <ul class="feature-list">
-              <li>支持出生日期、时间、省份与基础参数录入。</li>
-              <li>生成星盘图形与综合解读，集中浏览关键信息。</li>
-              <li>可生成星盘、查看解读，并通过详情链接回访当前报告。</li>
-            </ul>
-          </aside>
-
           <section class="surface form-surface">
             <form id="chart-form">
               <div class="form-grid">
@@ -1426,6 +1450,9 @@
           <span class="section-kicker">Reading</span>
           <h2 class="section-title">本命解读</h2>
           <p class="section-text">
+            你的个人本命盘说明书，解读你的人生密码。
+          </p>
+          <p class="section-text section-text-secondary">
             四大主题、依据链和质量指标会在这里集中展开。
           </p>
         </div>
@@ -1518,21 +1545,25 @@
         <div class="section-header">
           <span class="section-kicker">Roadmap</span>
           <h2 class="section-title">更多功能</h2>
-          <p class="section-text">
-            后续还会持续扩展更多占星相关功能。
-          </p>
+          <div class="todo-header-meta">
+            <span class="vip-badge vip-badge-roadmap">VIP会员专享</span>
+            <p class="section-text">更多功能均为会员能力，后续将逐步开放。</p>
+          </div>
         </div>
 
         <div class="todo-grid">
-          <article class="surface todo-card">
+          <article class="surface todo-card todo-card-vip">
+            <span class="todo-tag">VIP会员专享</span>
             <h3>多语言切换</h3>
             <p>未来将支持更灵活的多语言切换与输出体验。</p>
           </article>
-          <article class="surface todo-card">
+          <article class="surface todo-card todo-card-vip">
+            <span class="todo-tag">VIP会员专享</span>
             <h3>历史记录与导出</h3>
             <p>后续会加入历史记录管理与更完整的报告导出能力。</p>
           </article>
-          <article class="surface todo-card">
+          <article class="surface todo-card todo-card-vip">
+            <span class="todo-tag">VIP会员专享</span>
             <h3>流年与合盘</h3>
             <p>未来会扩展到流年与合盘等更深入的占星场景。</p>
           </article>

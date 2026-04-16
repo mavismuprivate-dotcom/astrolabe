@@ -210,3 +210,57 @@ func TestIndexPreviewCUsesDefaultConfigSummaryAndVipLocks(t *testing.T) {
 		`action-hidden`,
 	)
 }
+
+func TestIndexPageRefinesGeneratorReadingAndRoadmapCopy(t *testing.T) {
+	html := mustReadPage(t, "index.html")
+
+	requireMarkers(t, html,
+		`填写你的出生日期、时间、省份与基础内容，获取你的本命盘说明书。`,
+		`你的个人本命盘说明书，解读你的人生密码。`,
+		`四大主题、依据链和质量指标会在这里集中展开。`,
+		`class="todo-header-meta"`,
+		`class="vip-badge vip-badge-roadmap"`,
+		`更多功能均为会员能力，后续将逐步开放。`,
+		`class="surface todo-card todo-card-vip"`,
+	)
+
+	blockedMarkers := []string{
+		`<aside class="surface intro-surface">`,
+		`<h3>快速开始</h3>`,
+		`填写出生日期、时间、省份与基础参数，开始生成你的本命盘结果。`,
+		`后续还会持续扩展更多占星相关功能。`,
+	}
+
+	for _, marker := range blockedMarkers {
+		if strings.Contains(html, marker) {
+			t.Fatalf("expected marker to be removed %q", marker)
+		}
+	}
+}
+
+func TestIndexPreviewCRefinesGeneratorReadingAndRoadmapCopy(t *testing.T) {
+	html := mustReadPage(t, "index.preview-c.html")
+
+	requireMarkers(t, html,
+		`填写你的出生日期、时间、省份与基础内容，获取你的本命盘说明书。`,
+		`你的个人本命盘说明书，解读你的人生密码。`,
+		`四大主题、依据链和质量指标会在这里集中展开。`,
+		`class="todo-header-meta"`,
+		`class="vip-badge vip-badge-roadmap"`,
+		`更多功能均为会员能力，后续将逐步开放。`,
+		`class="surface todo-card todo-card-vip"`,
+	)
+
+	blockedMarkers := []string{
+		`<aside class="surface intro-surface">`,
+		`<h3>快速开始</h3>`,
+		`填写出生日期、时间、省份与基础参数，开始生成你的本命盘结果。`,
+		`后续还会持续扩展更多占星相关功能。`,
+	}
+
+	for _, marker := range blockedMarkers {
+		if strings.Contains(html, marker) {
+			t.Fatalf("expected preview marker to be removed %q", marker)
+		}
+	}
+}

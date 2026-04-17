@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Astrolabe - 西方本命盘</title>
+  <title>观我 Seelio - 西方本命盘</title>
   <link rel="preconnect" href="https://api.fontshare.com" />
   <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap" />
   <style>
@@ -666,6 +666,26 @@
 
     .actions-free {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .submit-action-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .submit-action-row .action-button {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .submit-status {
+      flex: none;
+      color: var(--text-soft);
+      font-size: 12px;
+      white-space: nowrap;
     }
 
     .actions-vip {
@@ -1466,7 +1486,7 @@
   <div class="page-layer">
     <header class="site-header">
       <div class="brand-row">
-        <a class="wordmark" href="#hero">ASTROLABE</a>
+        <a class="wordmark" href="#hero">观我 Seelio</a>
         <nav class="site-nav" aria-label="主导航">
           <a class="nav-link" href="#generator">
             <span>我的信息</span>
@@ -1535,14 +1555,16 @@
           </div>
 
           <div class="hero-copy">
-            <h1 class="hero-title">西方本命盘</h1>
+            <h1 class="hero-title">观我 Seelio</h1>
             <p class="hero-text">
-              输入出生信息，生成星盘可视化与结构化解读。
+              向内求索，与星辰对话。
+              <br />
+              输入出生信息，绘制你的专属星图与本命说明书。
             </p>
           </div>
 
           <a class="pill-button is-light" href="#generator">
-            <span class="pill-core">开始生成</span>
+            <span class="pill-core">绘制专属星图</span>
           </a>
         </div>
       </section>
@@ -1550,9 +1572,9 @@
       <section id="generator" class="section">
         <div class="section-header">
           <span class="section-kicker">Generator</span>
-          <h2 class="section-title">输入出生信息，生成星盘</h2>
+          <h2 class="section-title">输入出生信息，绘制星图</h2>
           <p class="section-text">
-            填写你的出生日期、时间、省份与基础内容，获取你的本命盘说明书。
+            时间像一条河流，你的第一声啼哭是涟漪的起点。
           </p>
         </div>
 
@@ -1619,7 +1641,10 @@
                   <span class="actions-title">免费功能</span>
                 </div>
                 <div class="actions actions-free">
-                  <button id="submit-button" class="action-button primary" type="submit" data-idle-text="生成星盘" data-loading-text="生成中...">生成星盘</button>
+                  <div class="submit-action-row">
+                    <button id="submit-button" class="action-button primary" type="submit" data-idle-text="绘制专属星图" data-loading-text="正在计算黄道夹角...">绘制专属星图</button>
+                    <span id="submit-status" class="submit-status" aria-live="polite" aria-atomic="true"></span>
+                  </div>
                   <button class="action-button" type="button" id="copy-report-link">复制详情链接</button>
                 </div>
               </div>
@@ -1856,7 +1881,7 @@
   </div>
 
     <footer class="site-footer">
-      <span>ASTROLABE © 2026</span>
+      <span>观我 Seelio © 2026</span>
       <div class="site-footer-links">
         <a href="/terms.html">用户协议</a>
         <a href="/privacy.html">隐私政策</a>
@@ -1871,6 +1896,7 @@
     const chartWrap = document.querySelector('#chart-wrap');
     const evidenceList = document.querySelector('#evidence-list');
     const submitButton = document.querySelector('#submit-button');
+    const submitStatusEl = document.querySelector('#submit-status');
     const recentReportsEl = document.querySelector('#recent-reports');
     const refreshReportsButton = document.querySelector('#refresh-reports');
     const copyReportLinkButton = document.querySelector('#copy-report-link');
@@ -1899,8 +1925,16 @@
     let currentUser = null;
     let currentMembership = null;
     let memberOrders = [];
+    let submitLoadingTimer = null;
+    let submitLoadingIndex = 0;
+    const submitIdleStatus = 'Seeking...';
     const reportQueryParam = 'report';
     const planetPlacementOrder = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'];
+    const submitLoadingMessages = [
+      '正在计算黄道夹角...',
+      '追溯那一刻的星尘记忆...',
+      '绘制你的心灵等高线...'
+    ];
     const planetPlacementLabels = {
       Sun: '太阳',
       Moon: '月亮',
@@ -1942,6 +1976,36 @@
       } else {
         delete errorEl.dataset.state;
       }
+    }
+
+    function setSubmitStatus(message) {
+      if (submitStatusEl) {
+        submitStatusEl.textContent = message || '';
+      }
+    }
+
+    function clearSubmitLoadingTimer() {
+      if (submitLoadingTimer !== null) {
+        window.clearInterval(submitLoadingTimer);
+        submitLoadingTimer = null;
+      }
+    }
+
+    function stopSubmitLoadingStatus() {
+      clearSubmitLoadingTimer();
+      submitLoadingIndex = 0;
+      setSubmitStatus(submitIdleStatus);
+    }
+
+    function startSubmitLoadingStatus() {
+      if (!submitStatusEl || submitLoadingMessages.length === 0) return;
+      clearSubmitLoadingTimer();
+      submitLoadingIndex = 0;
+      setSubmitStatus(submitLoadingMessages[0]);
+      submitLoadingTimer = window.setInterval(() => {
+        submitLoadingIndex = (submitLoadingIndex + 1) % submitLoadingMessages.length;
+        setSubmitStatus(submitLoadingMessages[submitLoadingIndex]);
+      }, 1200);
     }
 
     function readForm() {
@@ -2275,6 +2339,8 @@
       const year = Number(match[1]);
       return year >= 1 && year <= 9999;
     }
+
+    stopSubmitLoadingStatus();
 
     function polar(cx, cy, r, deg) {
       const rad = (deg - 90) * Math.PI / 180;
@@ -2641,8 +2707,6 @@
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       setFeedback('');
-      submitButton.disabled = true;
-      submitButton.textContent = submitButton.dataset.loadingText;
 
       try {
         const payload = readForm();
@@ -2650,6 +2714,10 @@
           setFeedback('出生日期格式应为 YYYY-MM-DD，且年份必须是 4 位数字');
           return;
         }
+
+        submitButton.disabled = true;
+        submitButton.textContent = submitButton.dataset.loadingText;
+        startSubmitLoadingStatus();
 
         const res = await fetch('/api/v1/chart/natal', {
           method: 'POST',
@@ -2668,6 +2736,7 @@
       } finally {
         submitButton.disabled = false;
         submitButton.textContent = submitButton.dataset.idleText;
+        stopSubmitLoadingStatus();
       }
     });
 

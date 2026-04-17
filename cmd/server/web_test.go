@@ -47,6 +47,64 @@ func TestIndexPageIncludesRedesignStructure(t *testing.T) {
 	)
 }
 
+func TestIndexPagesUseSeelioBrandAndSeekingStatus(t *testing.T) {
+	for _, name := range []string{"index.html", "index.preview-c.html"} {
+		html := mustReadPage(t, name)
+
+		requireMarkers(t, html,
+			`<title>观我 Seelio - 西方本命盘</title>`,
+			`>观我 Seelio<`,
+			`<h1 class="hero-title">观我 Seelio</h1>`,
+			`向内求索，与星辰对话。`,
+			`输入出生信息，绘制你的专属星图与本命说明书。`,
+			`<h2 class="section-title">输入出生信息，绘制星图</h2>`,
+			`时间像一条河流，你的第一声啼哭是涟漪的起点。`,
+			`<span class="pill-core">绘制专属星图</span>`,
+			`data-idle-text="绘制专属星图"`,
+			`data-loading-text="正在计算黄道夹角..."`,
+			`const submitIdleStatus = 'Seeking...';`,
+			`setSubmitStatus(submitIdleStatus);`,
+			`正在计算黄道夹角...`,
+			`追溯那一刻的星尘记忆...`,
+			`绘制你的心灵等高线...`,
+			`function startSubmitLoadingStatus()`,
+			`function stopSubmitLoadingStatus()`,
+		)
+
+		blockedMarkers := []string{
+			`Astrolabe - 西方本命盘`,
+			`ASTROLABE`,
+			`输入出生信息，生成星盘可视化与结构化解读。`,
+			`开始生成`,
+			`输入出生信息，生成星盘`,
+			`填写你的出生日期、时间、省份与基础内容，获取你的本命盘说明书。`,
+		}
+
+		for _, marker := range blockedMarkers {
+			if strings.Contains(html, marker) {
+				t.Fatalf("expected marker to be removed %q in %s", marker, name)
+			}
+		}
+	}
+}
+
+func TestIndexPagesDeferLoadingUntilBirthDateValidationPasses(t *testing.T) {
+	for _, name := range []string{"index.html", "index.preview-c.html"} {
+		html := mustReadPage(t, name)
+
+		validationIdx := strings.Index(html, `if (!isValidBirthDate(payload.birth_date)) {`)
+		loadingIdx := strings.Index(html, `startSubmitLoadingStatus();`)
+		disableIdx := strings.Index(html, `submitButton.disabled = true;`)
+
+		if validationIdx < 0 || loadingIdx < 0 || disableIdx < 0 {
+			t.Fatalf("missing submit flow markers in %s", name)
+		}
+		if !(validationIdx < loadingIdx && validationIdx < disableIdx) {
+			t.Fatalf("expected validation to run before loading state in %s", name)
+		}
+	}
+}
+
 func TestIndexPageUsesReadableChineseForReportActions(t *testing.T) {
 	html := mustReadPage(t, "index.html")
 
@@ -215,8 +273,9 @@ func TestIndexPageRefinesGeneratorReadingAndRoadmapCopy(t *testing.T) {
 	html := mustReadPage(t, "index.html")
 
 	requireMarkers(t, html,
-		`填写你的出生日期、时间、省份与基础内容，获取你的本命盘说明书。`,
-		`你的个人本命盘说明书，解读你的人生密码。`,
+		`输入出生信息，绘制你的专属星图与本命说明书。`,
+		`向内求索，与星辰对话。`,
+		`时间像一条河流，你的第一声啼哭是涟漪的起点。`,
 		`四大主题、依据链和质量指标会在这里集中展开。`,
 		`class="todo-header-meta"`,
 		`class="vip-badge vip-badge-roadmap"`,
@@ -242,8 +301,9 @@ func TestIndexPreviewCRefinesGeneratorReadingAndRoadmapCopy(t *testing.T) {
 	html := mustReadPage(t, "index.preview-c.html")
 
 	requireMarkers(t, html,
-		`填写你的出生日期、时间、省份与基础内容，获取你的本命盘说明书。`,
-		`你的个人本命盘说明书，解读你的人生密码。`,
+		`输入出生信息，绘制你的专属星图与本命说明书。`,
+		`向内求索，与星辰对话。`,
+		`时间像一条河流，你的第一声啼哭是涟漪的起点。`,
 		`四大主题、依据链和质量指标会在这里集中展开。`,
 		`class="todo-header-meta"`,
 		`class="vip-badge vip-badge-roadmap"`,
@@ -343,13 +403,62 @@ func TestLegalPagesAndFooterLinksExist(t *testing.T) {
 		)
 	}
 
-	for _, page := range []string{"terms.html", "privacy.html", "disclaimer.html", "refund.html"} {
-		html := mustReadPage(t, page)
+	type legalPageExpectation struct {
+		name    string
+		title   string
+		intro   string
+		markers []string
+	}
+
+	expectations := []legalPageExpectation{
+		{
+			name:  "terms.html",
+			title: `用户协议 | 观我 Seelio`,
+			intro: `本协议用于说明 观我 Seelio 的使用规则、会员服务范围以及用户的基本权利义务。`,
+			markers: []string{
+				`本命盘生成`,
+				`会员导出权益`,
+				`会员方案和服务策略进行调整`,
+			},
+		},
+		{
+			name:  "privacy.html",
+			title: `隐私政策 | 观我 Seelio`,
+			intro: `本政策用于说明 观我 Seelio 收集、使用和保护用户信息的基本方式。`,
+		},
+		{
+			name:  "disclaimer.html",
+			title: `免责声明 | 观我 Seelio`,
+			intro: `本页面用于说明 观我 Seelio 占星内容的适用边界。`,
+			markers: []string{
+				`本命盘解读`,
+				`娱乐性阅读`,
+				`责任限制`,
+			},
+		},
+		{
+			name:  "refund.html",
+			title: `支付与退款说明 | 观我 Seelio`,
+			intro: `本页面用于说明 观我 Seelio 第一版会员支付和退款的基本规则。`,
+		},
+	}
+
+	for _, expectation := range expectations {
+		html := mustReadPage(t, expectation.name)
 		requireMarkers(t, html,
-			`ASTROLABE`,
+			expectation.title,
+			`>观我 Seelio<`,
 			`返回首页`,
 			`最后更新`,
+			expectation.intro,
 		)
+		requireMarkers(t, html, expectation.markers...)
+
+		for _, blocked := range []string{`Astrolabe`, `ASTROLABE`} {
+			if strings.Contains(html, blocked) {
+				t.Fatalf("expected %s to remove %q", expectation.name, blocked)
+			}
+		}
 	}
 }
 
@@ -364,8 +473,14 @@ func TestVIPPageAndEntryLinksExist(t *testing.T) {
 
 	html := mustReadPage(t, "vip.html")
 	requireMarkers(t, html,
+		`<title>VIP会员 | 观我 Seelio</title>`,
+		`>观我 Seelio<`,
 		`VIP会员`,
-		`解锁完整本命解读、持续更新的个人周运，以及 VIP 专享的个人月运解读。`,
+		`<span class="hero-brand-line">向内求索，与星辰对话。</span>`,
+		`<span class="hero-copy-secondary">`,
+		"return `${phone.slice(0, 3)}****`;",
+		`setAuthStatus('验证码已发送到开发日志：');`,
+		`VIP 专享的个人月运解读`,
 		`月卡`,
 		`季卡`,
 		`年卡`,
@@ -396,6 +511,16 @@ func TestVIPPageReflectsWeeklyAndMonthlyBenefits(t *testing.T) {
 	html := mustReadPage(t, "vip.html")
 
 	requireMarkers(t, html,
+		`<title>VIP会员 | 观我 Seelio</title>`,
+		`>观我 Seelio<`,
+		`<p class="hero-text">`,
+		`<span class="hero-brand-line">向内求索，与星辰对话。</span>`,
+		`<span class="hero-copy-secondary">`,
+		"return `${phone.slice(0, 3)}****`;",
+		`setAuthStatus('验证码已发送到开发日志：');`,
+		`解锁完整本命解读`,
+		`VIP 专享的个人月运解读`,
+		`</p>`,
 		`限时赠送 2 次个人周运解读`,
 		`完整版本命解读`,
 		`个人周运持续更新`,

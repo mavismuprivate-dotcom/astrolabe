@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VIP会员 | Astrolabe</title>
+  <title>VIP会员 | 观我 Seelio</title>
   <style>
     :root {
       color-scheme: dark;
@@ -117,6 +117,17 @@
       color: var(--muted);
       line-height: 1.8;
       font-size: 15px;
+    }
+    .hero-brand-line {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--text);
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 1.6;
+    }
+    .hero-copy-secondary {
+      display: block;
     }
     .hero-art {
       position: relative;
@@ -350,7 +361,7 @@
 <body>
   <main class="page">
     <div class="topbar">
-      <a class="wordmark" href="/">ASTROLABE</a>
+      <a class="wordmark" href="/">观我 Seelio</a>
       <div class="top-actions">
         <button class="pill-button" type="button" id="vip-auth-entry-button">手机号登录</button>
         <a class="pill-button" href="/">返回首页</a>
@@ -361,7 +372,10 @@
       <section class="surface hero-copy">
         <span class="hero-kicker">VIP Member</span>
         <h1 class="hero-title">VIP会员</h1>
-        <p class="hero-text">解锁完整本命解读、持续更新的个人周运，以及 VIP 专享的个人月运解读。当前为内测环境，点击套餐后会创建订单并自动走通模拟支付流程。</p>
+        <p class="hero-text">
+          <span class="hero-brand-line">向内求索，与星辰对话。</span>
+          <span class="hero-copy-secondary">解锁完整本命解读、持续更新的个人周运，以及 VIP 专享的个人月运解读。当前为内测环境，点击套餐后会创建订单并自动走通模拟支付流程。</span>
+        </p>
       </section>
       <section class="surface hero-art" aria-hidden="true"></section>
     </section>
@@ -499,7 +513,7 @@
 
     function maskPhone(phone) {
       if (!phone || phone.length < 7) return phone || '手机号登录';
-      return ${phone.slice(0, 3)}****;
+      return `${phone.slice(0, 3)}****`;
     }
 
     function renderUserState() {
@@ -547,7 +561,7 @@
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || '获取验证码失败');
-      setAuthStatus(验证码已发送到开发日志：);
+      setAuthStatus('验证码已发送到开发日志：');
     }
 
     async function verifyLoginCode() {

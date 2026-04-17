@@ -7,7 +7,9 @@ import (
 	"net/http/httptest"
 	"path/filepath"
 	"testing"
+	"time"
 
+	"astrolabe/internal/auth"
 	"astrolabe/internal/astrology"
 	"astrolabe/internal/storage"
 )
@@ -276,5 +278,133 @@ func TestReportAccessIsScopedToSessionCookie(t *testing.T) {
 	h.ServeHTTP(getW, getReq)
 	if getW.Code != http.StatusNotFound {
 		t.Fatalf("expected GET status 404 for other session, got %d, body=%s", getW.Code, getW.Body.String())
+	}
+}
+
+func TestVIPExportsRequireMembership(t *testing.T) {
+	t.Parallel()
+
+	dbPath := filepath.Join(t.TempDir(), "reports.db")
+	store, err := storage.NewSQLiteStore(dbPath)
+	if err != nil {
+		t.Fatalf("NewSQLiteStore returned error: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = store.Close()
+	})
+
+	authSvc := auth.NewService(
+		store,
+		&captureCodeSender{},
+		func() time.Time { return time.Date(2026, 4, 17, 11, 0, 0, 0, time.UTC) },
+		func() (string, error) { return "123456", nil },
+	)
+	h := NewHandlerWithDependencies(astrology.NewService(astrology.NewCityResolver()), store, authSvc)
+	h.now = func() time.Time { return time.Date(2026, 4, 17, 11, 0, 0, 0, time.UTC) }
+
+	reportID, sessionCookie := createTestReport(t, h)
+	authCookie := authenticateTestUser(t, h, "13800138004")
+
+	pdfReq := httptest.NewRequest(http.MethodGet, "/api/v1/reports/"+reportID+"/pdf", nil)
+	pdfReq.AddCookie(sessionCookie)
+	pdfW := httptest.NewRecorder()
+	h.ServeHTTP(pdfW, pdfReq)
+	if pdfW.Code != http.StatusUnauthorized {
+		t.Fatalf("expected unauthenticated pdf export status 401, got %d, body=%s", pdfW.Code, pdfW.Body.String())
+	}
+
+	jsonReq := httptest.NewRequest(http.MethodGet, "/api/v1/reports/"+reportID+"/json", nil)
+	jsonReq.AddCookie(sessionCookie)
+	jsonReq.AddCookie(authCookie)
+	jsonW := httptest.NewRecorder()
+	h.ServeHTTP(jsonW, jsonReq)
+	if jsonW.Code != http.StatusForbidden {
+		t.Fatalf("expected non-vip json export status 403, got %d, body=%s", jsonW.Code, jsonW.Body.String())
+	}
+
+	mockPayAndActivateVIP(t, h, authCookie, "vip_monthly", "alipay")
+
+	textReq := httptest.NewRequest(http.MethodGet, "/api/v1/reports/"+reportID+"/text", nil)
+	textReq.AddCookie(sessionCookie)
+	textReq.AddCookie(authCookie)
+	textW := httptest.NewRecorder()
+	h.ServeHTTP(textW, textReq)
+	if textW.Code != http.StatusOK {
+		t.Fatalf("expected vip text export status 200, got %d, body=%s", textW.Code, textW.Body.String())
+	}
+	if got := textW.Header().Get("Content-Type"); got != "text/plain; charset=utf-8" {
+		t.Fatalf("expected text/plain export content-type, got %s", got)
+	}
+
+	jsonVipReq := httptest.NewRequest(http.MethodGet, "/api/v1/reports/"+reportID+"/json", nil)
+	jsonVipReq.AddCookie(sessionCookie)
+	jsonVipReq.AddCookie(authCookie)
+	jsonVipW := httptest.NewRecorder()
+	h.ServeHTTP(jsonVipW, jsonVipReq)
+	if jsonVipW.Code != http.StatusOK {
+		t.Fatalf("expected vip json export status 200, got %d, body=%s", jsonVipW.Code, jsonVipW.Body.String())
+	}
+	if got := jsonVipW.Header().Get("Content-Type"); got != "application/json" {
+		t.Fatalf("expected application/json export content-type, got %s", got)
+	}
+}
+
+func createTestReport(t *testing.T, h *Handler) (string, *http.Cookie) {
+	t.Helper()
+
+	payload := map[string]any{
+		"birth_date":    "1990-01-01",
+		"birth_time":    "08:15",
+		"birth_city":    "Shanghai",
+		"birth_country": "China",
+		"language":      "zh-CN",
+	}
+	buf, _ := json.Marshal(payload)
+	postReq := httptest.NewRequest(http.MethodPost, "/api/v1/chart/natal", bytes.NewReader(buf))
+	postReq.Header.Set("Content-Type", "application/json")
+	postW := httptest.NewRecorder()
+	h.ServeHTTP(postW, postReq)
+	if postW.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d, body=%s", postW.Code, postW.Body.String())
+	}
+
+	var created astrology.NatalChartResponse
+	if err := json.Unmarshal(postW.Body.Bytes(), &created); err != nil {
+		t.Fatalf("failed to parse create response: %v", err)
+	}
+	return created.ReportID, sessionCookieFromRecorder(t, postW)
+}
+
+func mockPayAndActivateVIP(t *testing.T, h *Handler, authCookie *http.Cookie, planCode string, provider string) {
+	t.Helper()
+
+	createBody, _ := json.Marshal(map[string]string{
+		"plan_code": planCode,
+		"provider":  provider,
+	})
+	createReq := httptest.NewRequest(http.MethodPost, "/api/v1/billing/orders", bytes.NewReader(createBody))
+	createReq.Header.Set("Content-Type", "application/json")
+	createReq.AddCookie(authCookie)
+	createW := httptest.NewRecorder()
+	h.ServeHTTP(createW, createReq)
+	if createW.Code != http.StatusCreated {
+		t.Fatalf("expected create order status 201, got %d, body=%s", createW.Code, createW.Body.String())
+	}
+
+	var createResp struct {
+		Order struct {
+			ID string `json:"id"`
+		} `json:"order"`
+	}
+	if err := json.Unmarshal(createW.Body.Bytes(), &createResp); err != nil {
+		t.Fatalf("parse create response: %v", err)
+	}
+
+	payReq := httptest.NewRequest(http.MethodPost, "/api/v1/billing/orders/"+createResp.Order.ID+"/mock-pay", nil)
+	payReq.AddCookie(authCookie)
+	payW := httptest.NewRecorder()
+	h.ServeHTTP(payW, payReq)
+	if payW.Code != http.StatusOK {
+		t.Fatalf("expected mock pay status 200, got %d, body=%s", payW.Code, payW.Body.String())
 	}
 }

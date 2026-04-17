@@ -132,6 +132,14 @@ func (h *Handler) handleReportRoutes(w http.ResponseWriter, r *http.Request) {
 		h.handleGetReportPDF(w, r)
 		return
 	}
+	if strings.HasSuffix(r.URL.Path, "/json") {
+		h.handleGetReportJSON(w, r)
+		return
+	}
+	if strings.HasSuffix(r.URL.Path, "/text") {
+		h.handleGetReportText(w, r)
+		return
+	}
 	h.handleGetReport(w, r)
 }
 
@@ -193,11 +201,89 @@ func (h *Handler) handleGetReportPDF(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "failed to load report")
 		return
 	}
+	if !h.ensureVIPExportAccess(w, r) {
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/pdf")
 	w.Header().Set("Content-Disposition", `attachment; filename="astrolabe-report-`+id+`.pdf"`)
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(reportpdf.BuildReport(report.Response))
+}
+
+func (h *Handler) handleGetReportJSON(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
+	if h.reports == nil {
+		writeError(w, http.StatusNotFound, "report storage unavailable")
+		return
+	}
+	sessionID := ensureSession(w, r)
+
+	id := strings.TrimPrefix(r.URL.Path, "/api/v1/reports/")
+	id = strings.TrimSuffix(id, "/json")
+	id = strings.TrimSuffix(id, "/")
+	if id == "" || strings.Contains(id, "/") {
+		writeError(w, http.StatusNotFound, "report not found")
+		return
+	}
+
+	report, err := h.reports.GetReport(r.Context(), id, sessionID)
+	if errors.Is(err, storage.ErrReportNotFound) {
+		writeError(w, http.StatusNotFound, "report not found")
+		return
+	}
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to load report")
+		return
+	}
+	if !h.ensureVIPExportAccess(w, r) {
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Disposition", `attachment; filename="astrolabe-report-`+id+`.json"`)
+	writeJSON(w, http.StatusOK, report.Response)
+}
+
+func (h *Handler) handleGetReportText(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
+	if h.reports == nil {
+		writeError(w, http.StatusNotFound, "report storage unavailable")
+		return
+	}
+	sessionID := ensureSession(w, r)
+
+	id := strings.TrimPrefix(r.URL.Path, "/api/v1/reports/")
+	id = strings.TrimSuffix(id, "/text")
+	id = strings.TrimSuffix(id, "/")
+	if id == "" || strings.Contains(id, "/") {
+		writeError(w, http.StatusNotFound, "report not found")
+		return
+	}
+
+	report, err := h.reports.GetReport(r.Context(), id, sessionID)
+	if errors.Is(err, storage.ErrReportNotFound) {
+		writeError(w, http.StatusNotFound, "report not found")
+		return
+	}
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to load report")
+		return
+	}
+	if !h.ensureVIPExportAccess(w, r) {
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("Content-Disposition", `attachment; filename="astrolabe-report-`+id+`.txt"`)
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte(report.Response.Reading.TextReport))
 }
 
 func (h *Handler) handleListReports(w http.ResponseWriter, r *http.Request) {
@@ -595,6 +681,34 @@ func membershipResponse(membership storage.Membership) map[string]any {
 		resp["expires_at"] = membership.ExpiresAt.UTC().Format(time.RFC3339Nano)
 	}
 	return resp
+}
+
+func (h *Handler) ensureVIPExportAccess(w http.ResponseWriter, r *http.Request) bool {
+	if h.auth == nil || h.billing == nil {
+		return true
+	}
+	user, ok := h.requireAuthenticatedUser(w, r)
+	if !ok {
+		return false
+	}
+	membership, err := h.billing.GetMembershipByUserID(r.Context(), user.ID)
+	if errors.Is(err, storage.ErrMembershipNotFound) {
+		writeError(w, http.StatusForbidden, "vip membership required")
+		return false
+	}
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to load membership status")
+		return false
+	}
+	if membership.Status != "active" {
+		writeError(w, http.StatusForbidden, "vip membership required")
+		return false
+	}
+	if membership.ExpiresAt != nil && !membership.ExpiresAt.After(h.now().UTC()) {
+		writeError(w, http.StatusForbidden, "vip membership required")
+		return false
+	}
+	return true
 }
 
 func (h *Handler) requireAuthenticatedUser(w http.ResponseWriter, r *http.Request) (storage.User, bool) {

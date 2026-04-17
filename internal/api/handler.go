@@ -15,10 +15,11 @@ import (
 )
 
 type Handler struct {
-	svc    *astrology.Service
+	svc     *astrology.Service
 	reports storage.ReportStore
-	auth   *auth.Service
-	mux    *http.ServeMux
+	billing storage.BillingStore
+	auth    *auth.Service
+	mux     *http.ServeMux
 }
 
 type membershipReader interface {
@@ -27,6 +28,17 @@ type membershipReader interface {
 
 const sessionCookieName = "astrolabe_session"
 const authCookieName = "astrolabe_auth"
+
+type billingPlan struct {
+	Code      string
+	AmountCNY int64
+}
+
+var billingPlans = map[string]billingPlan{
+	"vip_monthly":   {Code: "vip_monthly", AmountCNY: 2900},
+	"vip_quarterly": {Code: "vip_quarterly", AmountCNY: 6800},
+	"vip_yearly":    {Code: "vip_yearly", AmountCNY: 19800},
+}
 
 func NewHandler(svc *astrology.Service) *Handler {
 	return NewHandlerWithDependencies(svc, nil, nil)
@@ -40,7 +52,11 @@ func NewHandlerWithDependencies(svc *astrology.Service, reports storage.ReportSt
 	if svc == nil {
 		svc = astrology.NewService(astrology.NewCityResolver())
 	}
-	h := &Handler{svc: svc, reports: reports, auth: authSvc, mux: http.NewServeMux()}
+	var billingStore storage.BillingStore
+	if store, ok := reports.(storage.BillingStore); ok {
+		billingStore = store
+	}
+	h := &Handler{svc: svc, reports: reports, billing: billingStore, auth: authSvc, mux: http.NewServeMux()}
 	h.routes()
 	return h
 }
@@ -52,6 +68,7 @@ func (h *Handler) routes() {
 	h.mux.HandleFunc("/api/v1/auth/verify-code", h.handleAuthVerifyCode)
 	h.mux.HandleFunc("/api/v1/auth/logout", h.handleAuthLogout)
 	h.mux.HandleFunc("/api/v1/me", h.handleCurrentUser)
+	h.mux.HandleFunc("/api/v1/billing/orders", h.handleBillingOrders)
 	h.mux.HandleFunc("/api/v1/reports", h.handleListReports)
 	h.mux.HandleFunc("/api/v1/reports/", h.handleReportRoutes)
 }
@@ -354,6 +371,120 @@ func (h *Handler) handleAuthLogout(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   -1,
 	})
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
+}
+
+func (h *Handler) handleBillingOrders(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		h.handleCreateBillingOrder(w, r)
+	case http.MethodGet:
+		h.handleListBillingOrders(w, r)
+	default:
+		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+	}
+}
+
+func (h *Handler) handleCreateBillingOrder(w http.ResponseWriter, r *http.Request) {
+	if h.billing == nil {
+		writeError(w, http.StatusNotImplemented, "billing unavailable")
+		return
+	}
+	user, ok := h.requireAuthenticatedUser(w, r)
+	if !ok {
+		return
+	}
+	if !strings.Contains(r.Header.Get("Content-Type"), "application/json") {
+		writeError(w, http.StatusBadRequest, "content-type must be application/json")
+		return
+	}
+
+	var req struct {
+		PlanCode string `json:"plan_code"`
+		Provider string `json:"provider"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid JSON body")
+		return
+	}
+	plan, exists := billingPlans[strings.TrimSpace(req.PlanCode)]
+	if !exists {
+		writeError(w, http.StatusBadRequest, "unsupported plan_code")
+		return
+	}
+	provider := strings.TrimSpace(strings.ToLower(req.Provider))
+	if provider != "alipay" && provider != "wechat" {
+		writeError(w, http.StatusBadRequest, "unsupported provider")
+		return
+	}
+
+	order := storage.PaymentOrder{
+		ID:        storage.NewPaymentOrderID(),
+		UserID:    user.ID,
+		Provider:  provider,
+		PlanCode:  plan.Code,
+		AmountCNY: plan.AmountCNY,
+		Status:    "pending",
+		CreatedAt: time.Now().UTC(),
+	}
+	if err := h.billing.SavePaymentOrder(r.Context(), order); err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to create payment order")
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, map[string]any{
+		"order": map[string]any{
+			"id":         order.ID,
+			"plan_code":  order.PlanCode,
+			"provider":   order.Provider,
+			"amount_cny": order.AmountCNY,
+			"status":     order.Status,
+			"created_at": order.CreatedAt.UTC().Format(time.RFC3339Nano),
+		},
+		"payment": map[string]any{
+			"provider":     provider,
+			"mode":         "mock",
+			"checkout_url": "mockpay://checkout/" + order.ID + "?provider=" + provider,
+		},
+	})
+}
+
+func (h *Handler) handleListBillingOrders(w http.ResponseWriter, r *http.Request) {
+	if h.billing == nil {
+		writeError(w, http.StatusNotImplemented, "billing unavailable")
+		return
+	}
+	user, ok := h.requireAuthenticatedUser(w, r)
+	if !ok {
+		return
+	}
+	items, err := h.billing.ListPaymentOrdersByUserID(r.Context(), user.ID, 20)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to list payment orders")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"items": items})
+}
+
+func (h *Handler) requireAuthenticatedUser(w http.ResponseWriter, r *http.Request) (storage.User, bool) {
+	if h.auth == nil {
+		writeError(w, http.StatusUnauthorized, "authentication required")
+		return storage.User{}, false
+	}
+	cookie, err := r.Cookie(authCookieName)
+	if err != nil || strings.TrimSpace(cookie.Value) == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required")
+		return storage.User{}, false
+	}
+	user, err := h.auth.CurrentUser(r.Context(), cookie.Value)
+	if errors.Is(err, storage.ErrAuthSessionNotFound) {
+		writeError(w, http.StatusUnauthorized, "authentication required")
+		return storage.User{}, false
+	}
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to load current user")
+		return storage.User{}, false
+	}
+	return user, true
 }
 
 var errInternal = errors.New("internal")

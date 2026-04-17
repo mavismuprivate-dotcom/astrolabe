@@ -55,14 +55,14 @@ type Membership struct {
 }
 
 type PaymentOrder struct {
-	ID        string
-	UserID    string
-	Provider  string
-	PlanCode  string
-	AmountCNY int64
-	Status    string
-	CreatedAt time.Time
-	PaidAt    *time.Time
+	ID        string     `json:"id"`
+	UserID    string     `json:"user_id"`
+	Provider  string     `json:"provider"`
+	PlanCode  string     `json:"plan_code"`
+	AmountCNY int64      `json:"amount_cny"`
+	Status    string     `json:"status"`
+	CreatedAt time.Time  `json:"created_at"`
+	PaidAt    *time.Time `json:"paid_at"`
 }
 
 type ReportStore interface {
@@ -119,4 +119,12 @@ func NewAuthSessionID() string {
 		return "auth_" + time.Now().UTC().Format("20060102150405.000000000")
 	}
 	return "auth_" + hex.EncodeToString(buf[:])
+}
+
+func NewPaymentOrderID() string {
+	var buf [12]byte
+	if _, err := rand.Read(buf[:]); err != nil {
+		return "ord_" + time.Now().UTC().Format("20060102150405.000000000")
+	}
+	return "ord_" + hex.EncodeToString(buf[:])
 }

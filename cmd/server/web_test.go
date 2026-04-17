@@ -335,3 +335,41 @@ func TestLegalPagesAndFooterLinksExist(t *testing.T) {
 		)
 	}
 }
+
+func TestVIPPageAndEntryLinksExist(t *testing.T) {
+	for _, name := range []string{"index.html", "index.preview-c.html"} {
+		html := mustReadPage(t, name)
+		requireMarkers(t, html,
+			`href="/vip.html"`,
+			`立即开通 VIP`,
+		)
+	}
+
+	html := mustReadPage(t, "vip.html")
+	requireMarkers(t, html,
+		`VIP会员`,
+		`解锁完整报告导出与会员专享能力`,
+		`月卡`,
+		`季卡`,
+		`年卡`,
+		`12.9`,
+		`29.9`,
+		`99`,
+		`使用会员导出权益`,
+		`下载 JSON 报告`,
+		`下载 PDF 报告`,
+		`复制完整文本报告`,
+		`后续会员专享功能优先开放`,
+		`id="vip-auth-entry-button"`,
+		`id="vip-auth-modal"`,
+		`id="vip-order-feedback"`,
+		`data-plan-code="vip_monthly"`,
+		`data-plan-code="vip_quarterly"`,
+		`data-plan-code="vip_yearly"`,
+		`fetch('/api/v1/me')`,
+		`fetch('/api/v1/auth/request-code'`,
+		`fetch('/api/v1/auth/verify-code'`,
+		`fetch('/api/v1/billing/orders'`,
+		"fetch(`/api/v1/billing/orders/${order.order.id}/mock-pay`",
+	)
+}

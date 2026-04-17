@@ -1,0 +1,599 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VIP会员 | Astrolabe</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #060606;
+      --panel: rgba(255,255,255,0.045);
+      --panel-strong: rgba(255,255,255,0.08);
+      --border: rgba(255,255,255,0.12);
+      --text: rgba(255,255,255,0.94);
+      --muted: rgba(255,255,255,0.64);
+      --gold: #b89b6a;
+      --gold-soft: rgba(184,155,106,0.16);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", "PingFang SC", sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(184,155,106,0.14), transparent 26%),
+        radial-gradient(circle at 70% 20%, rgba(255,255,255,0.08), transparent 24%),
+        linear-gradient(180deg, #141516 0%, #070707 62%);
+      color: var(--text);
+    }
+    a { color: inherit; }
+    .page {
+      width: min(100%, 980px);
+      margin: 0 auto;
+      padding: 28px 20px 80px;
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .wordmark {
+      text-decoration: none;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      color: var(--text);
+    }
+    .top-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .pill-button,
+    .plan-button,
+    .ghost-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 0 18px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      text-decoration: none;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .pill-button {
+      min-height: 42px;
+      background: rgba(255,255,255,0.06);
+    }
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(320px, 420px);
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .surface {
+      border-radius: 28px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 26px 70px rgba(0,0,0,0.35);
+    }
+    .hero-copy,
+    .hero-art,
+    .benefits,
+    .pricing,
+    .status-card {
+      padding: 26px;
+    }
+    .hero-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 30px;
+      padding: 0 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(184,155,106,0.22);
+      background: var(--gold-soft);
+      color: #dfc79d;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .hero-title {
+      margin: 18px 0 12px;
+      font-size: clamp(34px, 7vw, 56px);
+      line-height: 0.98;
+      letter-spacing: -0.04em;
+    }
+    .hero-text {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.8;
+      font-size: 15px;
+    }
+    .hero-art {
+      position: relative;
+      overflow: hidden;
+      min-height: 320px;
+      background:
+        radial-gradient(circle at 50% 22%, rgba(184,155,106,0.9), rgba(184,155,106,0.2) 16%, transparent 17%),
+        linear-gradient(160deg, rgba(184,155,106,0.2), transparent 36%),
+        linear-gradient(180deg, rgba(255,255,255,0.08), transparent 40%),
+        linear-gradient(180deg, #3a3124 0%, #151311 52%, #0b0b0c 100%);
+    }
+    .hero-art::before,
+    .hero-art::after {
+      content: '';
+      position: absolute;
+      inset: auto;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.8);
+      opacity: 0.8;
+      filter: blur(0.4px);
+    }
+    .hero-art::before {
+      width: 170px;
+      height: 12px;
+      top: 88px;
+      left: 42px;
+      box-shadow:
+        90px 20px 0 -2px rgba(255,255,255,0.7),
+        180px -10px 0 -3px rgba(255,255,255,0.75),
+        60px 120px 0 -4px rgba(255,255,255,0.65),
+        220px 140px 0 -2px rgba(255,255,255,0.72);
+      transform: rotate(-18deg);
+    }
+    .hero-art::after {
+      width: 220px;
+      height: 180px;
+      right: -40px;
+      bottom: -30px;
+      background: radial-gradient(circle, rgba(184,155,106,0.45), transparent 70%);
+      filter: blur(18px);
+      opacity: 1;
+      box-shadow: none;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+      gap: 20px;
+    }
+    .section-title {
+      margin: 0 0 14px;
+      font-size: 24px;
+      letter-spacing: -0.02em;
+    }
+    .benefit-list {
+      display: grid;
+      gap: 14px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .benefit-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      color: rgba(255,255,255,0.84);
+      line-height: 1.7;
+    }
+    .benefit-dot {
+      width: 18px;
+      height: 18px;
+      margin-top: 4px;
+      border-radius: 999px;
+      border: 1px solid rgba(184,155,106,0.32);
+      background: var(--gold-soft);
+      flex: 0 0 auto;
+    }
+    .status-card {
+      display: grid;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .status-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .status-key { color: var(--muted); font-size: 13px; }
+    .status-value { font-weight: 600; }
+    .pricing {
+      display: grid;
+      gap: 14px;
+    }
+    .pricing-grid {
+      display: grid;
+      gap: 12px;
+    }
+    .plan-card {
+      display: grid;
+      gap: 12px;
+      padding: 18px;
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.028);
+    }
+    .plan-card.is-recommended {
+      border-color: rgba(184,155,106,0.28);
+      background: linear-gradient(180deg, rgba(184,155,106,0.12), rgba(255,255,255,0.03));
+    }
+    .plan-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .plan-name {
+      font-size: 20px;
+      font-weight: 600;
+    }
+    .plan-tag {
+      min-height: 26px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: var(--gold-soft);
+      border: 1px solid rgba(184,155,106,0.28);
+      color: #dfc79d;
+      font-size: 12px;
+    }
+    .plan-price {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .plan-price strong {
+      font-size: 30px;
+      color: var(--text);
+      letter-spacing: -0.04em;
+    }
+    .plan-note { color: var(--muted); font-size: 13px; line-height: 1.7; }
+    .plan-button {
+      width: 100%;
+      background: linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.04));
+      font-weight: 600;
+    }
+    .order-feedback {
+      min-height: 24px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .legal-links {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .legal-links a { color: var(--muted); text-decoration: none; }
+    .auth-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(14px);
+    }
+    .auth-modal.is-open { display: flex; }
+    .auth-dialog {
+      width: min(100%, 420px);
+      display: grid;
+      gap: 16px;
+      padding: 24px;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: linear-gradient(180deg, rgba(18, 18, 20, 0.98), rgba(8, 8, 10, 0.98));
+    }
+    .auth-dialog-header { display: flex; justify-content: space-between; gap: 16px; }
+    .auth-dialog-title { margin: 0 0 6px; font-size: 22px; }
+    .auth-dialog-text { margin: 0; color: var(--muted); line-height: 1.7; font-size: 14px; }
+    .icon-button {
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      cursor: pointer;
+    }
+    .field { display: grid; gap: 8px; }
+    .field label { font-size: 13px; color: var(--muted); }
+    .field input {
+      width: 100%; min-height: 50px; padding: 0 16px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03); color: var(--text);
+    }
+    .auth-actions { display: grid; gap: 10px; }
+    @media (max-width: 900px) {
+      .hero, .grid { grid-template-columns: 1fr; }
+      .topbar { align-items: flex-start; flex-direction: column; }
+      .top-actions { width: 100%; }
+      .pill-button { flex: 1 1 auto; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="topbar">
+      <a class="wordmark" href="/">ASTROLABE</a>
+      <div class="top-actions">
+        <button class="pill-button" type="button" id="vip-auth-entry-button">手机号登录</button>
+        <a class="pill-button" href="/">返回首页</a>
+      </div>
+    </div>
+
+    <section class="hero">
+      <section class="surface hero-copy">
+        <span class="hero-kicker">VIP Member</span>
+        <h1 class="hero-title">VIP会员</h1>
+        <p class="hero-text">解锁完整报告导出与会员专享能力。当前为内测环境，点击套餐后会创建订单并自动走通模拟支付流程。</p>
+      </section>
+      <section class="surface hero-art" aria-hidden="true"></section>
+    </section>
+
+    <section class="grid">
+      <section class="surface benefits">
+        <h2 class="section-title">使用会员导出权益</h2>
+        <ul class="benefit-list">
+          <li class="benefit-item"><span class="benefit-dot"></span><span>下载 JSON 报告</span></li>
+          <li class="benefit-item"><span class="benefit-dot"></span><span>下载 PDF 报告</span></li>
+          <li class="benefit-item"><span class="benefit-dot"></span><span>复制完整文本报告</span></li>
+          <li class="benefit-item"><span class="benefit-dot"></span><span>会员中心查看会员状态与最近订单</span></li>
+          <li class="benefit-item"><span class="benefit-dot"></span><span>后续会员专享功能优先开放</span></li>
+        </ul>
+      </section>
+
+      <div>
+        <section class="surface status-card">
+          <div class="status-row"><span class="status-key">登录状态</span><strong class="status-value" id="vip-user-phone">未登录</strong></div>
+          <div class="status-row"><span class="status-key">会员状态</span><strong class="status-value" id="vip-member-status">免费账户</strong></div>
+          <div class="status-row"><span class="status-key">当前方案</span><strong class="status-value" id="vip-member-plan">-</strong></div>
+          <div class="status-row"><span class="status-key">到期时间</span><strong class="status-value" id="vip-member-expiry">-</strong></div>
+        </section>
+
+        <section class="surface pricing">
+          <h2 class="section-title">选择会员方案</h2>
+          <div class="pricing-grid">
+            <article class="plan-card">
+              <div class="plan-head">
+                <strong class="plan-name">月卡</strong>
+              </div>
+              <div class="plan-price"><strong>12.9</strong><span>元 / 30天</span></div>
+              <p class="plan-note">适合先体验会员导出权益和订单流程。</p>
+              <button class="plan-button" type="button" data-plan-code="vip_monthly" data-provider="alipay">开通月卡</button>
+            </article>
+            <article class="plan-card is-recommended">
+              <div class="plan-head">
+                <strong class="plan-name">季卡</strong>
+                <span class="plan-tag">推荐</span>
+              </div>
+              <div class="plan-price"><strong>29.9</strong><span>元 / 90天</span></div>
+              <p class="plan-note">当前主推方案，适合持续使用报告导出与会员权益。</p>
+              <button class="plan-button" type="button" data-plan-code="vip_quarterly" data-provider="alipay">开通季卡</button>
+            </article>
+            <article class="plan-card">
+              <div class="plan-head">
+                <strong class="plan-name">年卡</strong>
+              </div>
+              <div class="plan-price"><strong>99</strong><span>元 / 365天</span></div>
+              <p class="plan-note">适合长期使用，后续会员专享功能会继续叠加。</p>
+              <button class="plan-button" type="button" data-plan-code="vip_yearly" data-provider="alipay">开通年卡</button>
+            </article>
+          </div>
+          <p class="order-feedback" id="vip-order-feedback">未登录时点击套餐会先提示登录。</p>
+        </section>
+      </div>
+    </section>
+
+    <div class="legal-links">
+      <a href="/terms.html">用户协议</a>
+      <a href="/privacy.html">隐私政策</a>
+      <a href="/disclaimer.html">免责声明</a>
+      <a href="/refund.html">支付与退款说明</a>
+    </div>
+  </main>
+
+  <div class="auth-modal" id="vip-auth-modal" aria-hidden="true">
+    <div class="auth-dialog">
+      <div class="auth-dialog-header">
+        <div>
+          <h3 class="auth-dialog-title">登录 / 会员身份</h3>
+          <p class="auth-dialog-text">第一版先使用手机号验证码登录，验证码会输出到服务端日志，后续再接真实短信。</p>
+        </div>
+        <button class="icon-button" type="button" id="vip-auth-close-button" aria-label="关闭">×</button>
+      </div>
+      <div class="field">
+        <label for="vip-auth-phone">手机号</label>
+        <input id="vip-auth-phone" type="tel" inputmode="numeric" placeholder="请输入手机号" />
+      </div>
+      <div class="field">
+        <label for="vip-auth-code">验证码</label>
+        <input id="vip-auth-code" type="text" inputmode="numeric" placeholder="请输入 6 位验证码" />
+      </div>
+      <div class="auth-actions">
+        <button class="plan-button" type="button" id="vip-request-code-button">获取验证码</button>
+        <button class="plan-button" type="button" id="vip-verify-code-button">登录并继续</button>
+      </div>
+      <p class="order-feedback" id="vip-auth-status"></p>
+    </div>
+  </div>
+
+  <script>
+    const authEntryButton = document.querySelector('#vip-auth-entry-button');
+    const authModal = document.querySelector('#vip-auth-modal');
+    const authCloseButton = document.querySelector('#vip-auth-close-button');
+    const authPhoneInput = document.querySelector('#vip-auth-phone');
+    const authCodeInput = document.querySelector('#vip-auth-code');
+    const requestCodeButton = document.querySelector('#vip-request-code-button');
+    const verifyCodeButton = document.querySelector('#vip-verify-code-button');
+    const authStatusEl = document.querySelector('#vip-auth-status');
+    const orderFeedbackEl = document.querySelector('#vip-order-feedback');
+    const userPhoneEl = document.querySelector('#vip-user-phone');
+    const memberStatusEl = document.querySelector('#vip-member-status');
+    const memberPlanEl = document.querySelector('#vip-member-plan');
+    const memberExpiryEl = document.querySelector('#vip-member-expiry');
+    const planButtons = Array.from(document.querySelectorAll('[data-plan-code]'));
+    let currentUser = null;
+    let currentMembership = null;
+
+    function defaultMembership() {
+      return { status: 'none', plan_code: '', is_vip: false, expires_at: null };
+    }
+
+    function membershipPlanLabel(planCode) {
+      const labels = { vip_monthly: '月卡 VIP', vip_quarterly: '季卡 VIP', vip_yearly: '年卡 VIP' };
+      return labels[planCode] || '-';
+    }
+
+    function membershipStatusLabel(membership) {
+      if (!membership || membership.status === 'none') return '免费账户';
+      if (membership.status === 'active') return 'VIP 已开通';
+      if (membership.status === 'expired') return 'VIP 已过期';
+      return membership.status || '免费账户';
+    }
+
+    function formatMemberDate(value) {
+      if (!value) return '-';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return value;
+      return new Intl.DateTimeFormat('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
+    }
+
+    function maskPhone(phone) {
+      if (!phone || phone.length < 7) return phone || '手机号登录';
+      return ${phone.slice(0, 3)}****;
+    }
+
+    function renderUserState() {
+      const membership = currentMembership || defaultMembership();
+      authEntryButton.textContent = currentUser ? maskPhone(currentUser.phone) : '手机号登录';
+      userPhoneEl.textContent = currentUser ? currentUser.phone : '未登录';
+      memberStatusEl.textContent = membershipStatusLabel(membership);
+      memberPlanEl.textContent = membershipPlanLabel(membership.plan_code);
+      memberExpiryEl.textContent = formatMemberDate(membership.expires_at);
+    }
+
+    function setAuthStatus(message) {
+      authStatusEl.textContent = message || '';
+    }
+
+    function setOrderFeedback(message) {
+      orderFeedbackEl.textContent = message || '';
+    }
+
+    function openAuthModal() {
+      authModal.classList.add('is-open');
+      authModal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeAuthModal() {
+      authModal.classList.remove('is-open');
+      authModal.setAttribute('aria-hidden', 'true');
+    }
+
+    async function loadCurrentUser() {
+      const res = await fetch('/api/v1/me');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || '加载登录状态失败');
+      currentUser = data.authenticated ? data.user : null;
+      currentMembership = data.authenticated ? (data.membership || defaultMembership()) : defaultMembership();
+      renderUserState();
+    }
+
+    async function requestLoginCode() {
+      const phone = authPhoneInput.value.trim();
+      const res = await fetch('/api/v1/auth/request-code', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ phone }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || '获取验证码失败');
+      setAuthStatus(验证码已发送到开发日志：);
+    }
+
+    async function verifyLoginCode() {
+      const phone = authPhoneInput.value.trim();
+      const code = authCodeInput.value.trim();
+      const res = await fetch('/api/v1/auth/verify-code', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ phone, code }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || '登录失败');
+      await loadCurrentUser();
+      closeAuthModal();
+      setOrderFeedback('登录成功，可以选择会员方案。');
+    }
+
+    async function createAndPayOrder(planCode, provider) {
+      if (!currentUser) {
+        openAuthModal();
+        setOrderFeedback('请先登录后再开通会员。');
+        return;
+      }
+      const createRes = await fetch('/api/v1/billing/orders', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ plan_code: planCode, provider }),
+      });
+      const order = await createRes.json();
+      if (!createRes.ok) throw new Error(order.error || '创建订单失败');
+      const payRes = await fetch(`/api/v1/billing/orders/${order.order.id}/mock-pay`, { method: 'POST' });
+      const paid = await payRes.json();
+      if (!payRes.ok) throw new Error(paid.error || '支付确认失败');
+      await loadCurrentUser();
+      setOrderFeedback(`订单已完成：${membershipPlanLabel(planCode)} 已开通。`);
+    }
+
+    authEntryButton.addEventListener('click', openAuthModal);
+    authCloseButton.addEventListener('click', closeAuthModal);
+    authModal.addEventListener('click', (event) => {
+      if (event.target === authModal) closeAuthModal();
+    });
+    requestCodeButton.addEventListener('click', async () => {
+      try { await requestLoginCode(); } catch (err) { setAuthStatus(err.message || '获取验证码失败'); }
+    });
+    verifyCodeButton.addEventListener('click', async () => {
+      try { await verifyLoginCode(); } catch (err) { setAuthStatus(err.message || '登录失败'); }
+    });
+    planButtons.forEach((button) => {
+      button.addEventListener('click', async () => {
+        try {
+          button.disabled = true;
+          await createAndPayOrder(button.dataset.planCode, button.dataset.provider || 'alipay');
+        } catch (err) {
+          setOrderFeedback(err.message || '开通失败');
+        } finally {
+          button.disabled = false;
+        }
+      });
+    });
+
+    loadCurrentUser().catch(() => {
+      currentUser = null;
+      currentMembership = defaultMembership();
+      renderUserState();
+    });
+  </script>
+</body>
+</html>
+

@@ -228,6 +228,27 @@
       background: linear-gradient(180deg, rgba(36, 42, 50, 0.96), rgba(14, 16, 20, 0.98));
     }
 
+    .site-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding: 24px 0 40px;
+      color: rgba(255, 255, 255, 0.54);
+      font-size: 13px;
+    }
+
+    .site-footer-links {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .site-footer-links a {
+      color: rgba(255, 255, 255, 0.72);
+      text-decoration: none;
+    }
     .auth-modal {
       position: fixed;
       inset: 0;
@@ -1835,6 +1856,15 @@
     </main>
   </div>
 
+    <footer class="site-footer">
+      <span>ASTROLABE © 2026</span>
+      <div class="site-footer-links">
+        <a href="/terms.html">用户协议</a>
+        <a href="/privacy.html">隐私政策</a>
+        <a href="/disclaimer.html">免责声明</a>
+        <a href="/refund.html">支付与退款说明</a>
+      </div>
+    </footer>
   <script>
     const form = document.querySelector('#chart-form');
     const errorEl = document.querySelector('#error');
@@ -2795,25 +2825,11 @@
       } catch (err) {
         setFeedback(err.message || '加载报告失败');
       }
-    } catch (_) {
-        currentUser = null;
-        syncAuthUI();
-      }
-      try {
-        await fetchRecentReports();
-      } catch (_) {
-        renderRecentReports([]);
-      }
-
-      try {
-        await loadReportFromQuery();
-      } catch (err) {
-        setFeedback(err.message || '加载报告失败');
-      }
     }
 
     initPage();
   </script>
 </body>
 </html>
+
 

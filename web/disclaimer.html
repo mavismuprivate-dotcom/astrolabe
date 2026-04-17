@@ -1,0 +1,115 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>免责声明 | Astrolabe</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #060606;
+      --surface: rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.12);
+      --text: rgba(255,255,255,0.92);
+      --muted: rgba(255,255,255,0.62);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", "PingFang SC", sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(255,255,255,0.08), transparent 28%),
+        linear-gradient(180deg, #101113 0%, #060606 62%);
+      color: var(--text);
+    }
+    .page {
+      width: min(100%, 920px);
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+    .brand {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .wordmark {
+      color: var(--text);
+      text-decoration: none;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+    }
+    .back-link {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+    }
+    .hero, .section {
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: 28px;
+      backdrop-filter: blur(18px);
+    }
+    .hero { margin-bottom: 16px; }
+    .title {
+      margin: 0 0 12px;
+      font-size: clamp(30px, 6vw, 46px);
+      line-height: 1.05;
+    }
+    .intro, .updated, .section p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+    .updated { margin-top: 12px; font-size: 13px; }
+    .sections {
+      display: grid;
+      gap: 14px;
+      margin-top: 16px;
+    }
+    .section h2 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="brand">
+      <a class="wordmark" href="/">ASTROLABE</a>
+      <a class="back-link" href="/">返回首页</a>
+    </div>
+    <section class="hero">
+      <h1 class="title">免责声明</h1>
+      <p class="intro">本页面用于说明 Astrolabe 占星内容的适用边界。</p>
+      <p class="updated">最后更新：2026-04-17</p>
+    </section>
+    <div class="sections">
+      <section class="section">
+        <h2>1. 内容属性</h2>
+        <p>Astrolabe 提供的本命盘解读、报告文案和相关建议，仅供个人参考与娱乐性阅读，不构成医学、法律、投资、心理治疗或其他专业结论。</p>
+      </section>
+      <section class="section">
+        <h2>2. 非专业替代</h2>
+        <p>用户如遇到医疗、法律、财务、心理健康或其他高风险决策问题，应咨询具备资质的专业机构或专业人士，而不应仅依据本服务内容作出决定。</p>
+      </section>
+      <section class="section">
+        <h2>3. 结果边界</h2>
+        <p>占星解读存在模型、输入信息、算法和文本表达层面的局限，不保证结果绝对准确、完整或适用于所有场景。</p>
+      </section>
+      <section class="section">
+        <h2>4. 输入责任</h2>
+        <p>用户应尽量确保出生日期、时间、地点等输入信息真实、准确。因用户输入不准确导致的解读偏差，由用户自行承担。</p>
+      </section>
+      <section class="section">
+        <h2>5. 责任限制</h2>
+        <p>在法律允许范围内，Astrolabe 不对用户因依赖本服务内容而产生的直接或间接损失承担保证性责任。</p>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

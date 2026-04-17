@@ -1,0 +1,115 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>隐私政策 | Astrolabe</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #060606;
+      --surface: rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.12);
+      --text: rgba(255,255,255,0.92);
+      --muted: rgba(255,255,255,0.62);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", "PingFang SC", sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(255,255,255,0.08), transparent 28%),
+        linear-gradient(180deg, #101113 0%, #060606 62%);
+      color: var(--text);
+    }
+    .page {
+      width: min(100%, 920px);
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+    .brand {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .wordmark {
+      color: var(--text);
+      text-decoration: none;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+    }
+    .back-link {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+    }
+    .hero, .section {
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: 28px;
+      backdrop-filter: blur(18px);
+    }
+    .hero { margin-bottom: 16px; }
+    .title {
+      margin: 0 0 12px;
+      font-size: clamp(30px, 6vw, 46px);
+      line-height: 1.05;
+    }
+    .intro, .updated, .section p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+    .updated { margin-top: 12px; font-size: 13px; }
+    .sections {
+      display: grid;
+      gap: 14px;
+      margin-top: 16px;
+    }
+    .section h2 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="brand">
+      <a class="wordmark" href="/">ASTROLABE</a>
+      <a class="back-link" href="/">返回首页</a>
+    </div>
+    <section class="hero">
+      <h1 class="title">隐私政策</h1>
+      <p class="intro">本政策用于说明 Astrolabe 收集、使用和保护用户信息的基本方式。</p>
+      <p class="updated">最后更新：2026-04-17</p>
+    </section>
+    <div class="sections">
+      <section class="section">
+        <h2>1. 收集的信息</h2>
+        <p>为提供登录、会员状态识别和报告服务，我们可能收集手机号、登录会话信息、出生信息、生成报告记录和订单记录。</p>
+      </section>
+      <section class="section">
+        <h2>2. 使用目的</h2>
+        <p>上述信息主要用于账号登录、生成星盘、展示会员状态、处理订单、提供导出能力和改进服务稳定性，不会用于与产品无关的用途。</p>
+      </section>
+      <section class="section">
+        <h2>3. 存储与保护</h2>
+        <p>用户数据当前存储在服务端数据库中，用于支持登录、报告历史和会员能力。我们会在现有技术条件下采取合理的访问控制和运行时保护措施。</p>
+      </section>
+      <section class="section">
+        <h2>4. 信息共享</h2>
+        <p>除法律法规要求或完成支付、短信等必要第三方服务接入外，我们不会主动向无关第三方出售或随意披露你的个人信息。</p>
+      </section>
+      <section class="section">
+        <h2>5. 用户权利</h2>
+        <p>用户可通过退出登录、停止使用本服务等方式中止当前使用。后续如增加账号资料管理、注销或数据删除能力，将以产品实际提供的入口为准。</p>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

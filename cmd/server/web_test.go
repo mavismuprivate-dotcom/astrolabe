@@ -308,3 +308,30 @@ func TestMemberCenterStructureExistsInBothPages(t *testing.T) {
 		)
 	}
 }
+
+func TestLegalPagesAndFooterLinksExist(t *testing.T) {
+	for _, name := range []string{"index.html", "index.preview-c.html"} {
+		html := mustReadPage(t, name)
+
+		requireMarkers(t, html,
+			`class="site-footer"`,
+			`href="/terms.html"`,
+			`href="/privacy.html"`,
+			`href="/disclaimer.html"`,
+			`href="/refund.html"`,
+			`用户协议`,
+			`隐私政策`,
+			`免责声明`,
+			`支付与退款说明`,
+		)
+	}
+
+	for _, page := range []string{"terms.html", "privacy.html", "disclaimer.html", "refund.html"} {
+		html := mustReadPage(t, page)
+		requireMarkers(t, html,
+			`ASTROLABE`,
+			`返回首页`,
+			`最后更新`,
+		)
+	}
+}

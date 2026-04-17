@@ -1,0 +1,115 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>用户协议 | Astrolabe</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #060606;
+      --surface: rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.12);
+      --text: rgba(255,255,255,0.92);
+      --muted: rgba(255,255,255,0.62);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", "PingFang SC", sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(255,255,255,0.08), transparent 28%),
+        linear-gradient(180deg, #101113 0%, #060606 62%);
+      color: var(--text);
+    }
+    .page {
+      width: min(100%, 920px);
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+    .brand {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .wordmark {
+      color: var(--text);
+      text-decoration: none;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+    }
+    .back-link {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+    }
+    .hero, .section {
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: 28px;
+      backdrop-filter: blur(18px);
+    }
+    .hero { margin-bottom: 16px; }
+    .title {
+      margin: 0 0 12px;
+      font-size: clamp(30px, 6vw, 46px);
+      line-height: 1.05;
+    }
+    .intro, .updated, .section p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+    .updated { margin-top: 12px; font-size: 13px; }
+    .sections {
+      display: grid;
+      gap: 14px;
+      margin-top: 16px;
+    }
+    .section h2 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="brand">
+      <a class="wordmark" href="/">ASTROLABE</a>
+      <a class="back-link" href="/">返回首页</a>
+    </div>
+    <section class="hero">
+      <h1 class="title">用户协议</h1>
+      <p class="intro">本协议用于说明 Astrolabe 的使用规则、会员服务范围以及用户的基本权利义务。</p>
+      <p class="updated">最后更新：2026-04-17</p>
+    </section>
+    <div class="sections">
+      <section class="section">
+        <h2>1. 服务说明</h2>
+        <p>Astrolabe 当前提供本命盘生成、报告查看、会员导出权益等功能。产品内容以页面实际展示为准，后续功能调整、升级或下线时，会以产品页面和公告为准。</p>
+      </section>
+      <section class="section">
+        <h2>2. 账号与安全</h2>
+        <p>用户需通过手机号验证码完成登录，并妥善保管自己的登录设备与会话信息。因用户自行泄露验证码、借用账号或共用设备导致的风险，由用户自行承担。</p>
+      </section>
+      <section class="section">
+        <h2>3. 会员权益</h2>
+        <p>会员权益以购买页面、会员中心和产品内说明为准。当前会员权益主要包括受限导出能力及后续会员专享功能，未明确列明的能力不当然构成会员权益。</p>
+      </section>
+      <section class="section">
+        <h2>4. 使用边界</h2>
+        <p>用户不得利用本服务进行违法违规活动，不得攻击、绕过、干扰本服务的正常运行，不得恶意抓取、倒卖或二次分发平台内容。</p>
+      </section>
+      <section class="section">
+        <h2>5. 服务调整</h2>
+        <p>为保证产品质量与安全，Astrolabe 有权在合理范围内对功能、界面、价格、会员方案和服务策略进行调整。重大调整将通过页面公告、购买页说明或会员中心提示进行同步。</p>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

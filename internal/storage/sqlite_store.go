@@ -353,6 +353,159 @@ func (s *SQLiteStore) DeleteAuthSession(ctx context.Context, sessionID string) e
 	return err
 }
 
+func (s *SQLiteStore) UpsertMembership(ctx context.Context, membership Membership) error {
+	var expiresAt any
+	if membership.ExpiresAt != nil {
+		expiresAt = membership.ExpiresAt.UTC().Format(time.RFC3339Nano)
+	}
+	_, err := s.db.ExecContext(
+		ctx,
+		`INSERT INTO memberships (user_id, plan_code, status, started_at, expires_at, updated_at)
+		 VALUES (?, ?, ?, ?, ?, ?)
+		 ON CONFLICT(user_id) DO UPDATE SET
+		   plan_code=excluded.plan_code,
+		   status=excluded.status,
+		   started_at=excluded.started_at,
+		   expires_at=excluded.expires_at,
+		   updated_at=excluded.updated_at`,
+		membership.UserID,
+		membership.PlanCode,
+		membership.Status,
+		membership.StartedAt.UTC().Format(time.RFC3339Nano),
+		expiresAt,
+		membership.UpdatedAt.UTC().Format(time.RFC3339Nano),
+	)
+	return err
+}
+
+func (s *SQLiteStore) GetMembershipByUserID(ctx context.Context, userID string) (Membership, error) {
+	var (
+		membership Membership
+		startedAtRaw string
+		expiresAtRaw sql.NullString
+		updatedAtRaw string
+	)
+	err := s.db.QueryRowContext(
+		ctx,
+		`SELECT user_id, plan_code, status, started_at, expires_at, updated_at
+		 FROM memberships
+		 WHERE user_id = ?`,
+		userID,
+	).Scan(
+		&membership.UserID,
+		&membership.PlanCode,
+		&membership.Status,
+		&startedAtRaw,
+		&expiresAtRaw,
+		&updatedAtRaw,
+	)
+	if errors.Is(err, sql.ErrNoRows) {
+		return Membership{}, ErrMembershipNotFound
+	}
+	if err != nil {
+		return Membership{}, err
+	}
+	var errParse error
+	membership.StartedAt, errParse = time.Parse(time.RFC3339Nano, startedAtRaw)
+	if errParse != nil {
+		return Membership{}, errParse
+	}
+	membership.UpdatedAt, errParse = time.Parse(time.RFC3339Nano, updatedAtRaw)
+	if errParse != nil {
+		return Membership{}, errParse
+	}
+	if expiresAtRaw.Valid && expiresAtRaw.String != "" {
+		expiresAt, errParse := time.Parse(time.RFC3339Nano, expiresAtRaw.String)
+		if errParse != nil {
+			return Membership{}, errParse
+		}
+		membership.ExpiresAt = &expiresAt
+	}
+	return membership, nil
+}
+
+func (s *SQLiteStore) SavePaymentOrder(ctx context.Context, order PaymentOrder) error {
+	var paidAt any
+	if order.PaidAt != nil {
+		paidAt = order.PaidAt.UTC().Format(time.RFC3339Nano)
+	}
+	_, err := s.db.ExecContext(
+		ctx,
+		`INSERT INTO payment_orders (id, user_id, provider, plan_code, amount_cny, status, created_at, paid_at)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		 ON CONFLICT(id) DO UPDATE SET
+		   provider=excluded.provider,
+		   plan_code=excluded.plan_code,
+		   amount_cny=excluded.amount_cny,
+		   status=excluded.status,
+		   created_at=excluded.created_at,
+		   paid_at=excluded.paid_at`,
+		order.ID,
+		order.UserID,
+		order.Provider,
+		order.PlanCode,
+		order.AmountCNY,
+		order.Status,
+		order.CreatedAt.UTC().Format(time.RFC3339Nano),
+		paidAt,
+	)
+	return err
+}
+
+func (s *SQLiteStore) ListPaymentOrdersByUserID(ctx context.Context, userID string, limit int) ([]PaymentOrder, error) {
+	if limit <= 0 {
+		limit = 20
+	}
+	rows, err := s.db.QueryContext(
+		ctx,
+		`SELECT id, user_id, provider, plan_code, amount_cny, status, created_at, paid_at
+		 FROM payment_orders
+		 WHERE user_id = ?
+		 ORDER BY datetime(created_at) DESC, id DESC
+		 LIMIT ?`,
+		userID,
+		limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := make([]PaymentOrder, 0, limit)
+	for rows.Next() {
+		var (
+			item PaymentOrder
+			createdAtRaw string
+			paidAtRaw sql.NullString
+		)
+		if err := rows.Scan(
+			&item.ID,
+			&item.UserID,
+			&item.Provider,
+			&item.PlanCode,
+			&item.AmountCNY,
+			&item.Status,
+			&createdAtRaw,
+			&paidAtRaw,
+		); err != nil {
+			return nil, err
+		}
+		item.CreatedAt, err = time.Parse(time.RFC3339Nano, createdAtRaw)
+		if err != nil {
+			return nil, err
+		}
+		if paidAtRaw.Valid && paidAtRaw.String != "" {
+			paidAt, err := time.Parse(time.RFC3339Nano, paidAtRaw.String)
+			if err != nil {
+				return nil, err
+			}
+			item.PaidAt = &paidAt
+		}
+		items = append(items, item)
+	}
+	return items, rows.Err()
+}
+
 func (s *SQLiteStore) Close() error {
 	if s == nil || s.db == nil {
 		return nil

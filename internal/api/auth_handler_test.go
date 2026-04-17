@@ -88,12 +88,21 @@ func TestAuthRequestVerifyMeAndLogoutFlow(t *testing.T) {
 		User          struct {
 			Phone string `json:"phone"`
 		} `json:"user"`
+		Membership struct {
+			Status    string  `json:"status"`
+			PlanCode  string  `json:"plan_code"`
+			IsVIP     bool    `json:"is_vip"`
+			ExpiresAt *string `json:"expires_at"`
+		} `json:"membership"`
 	}
 	if err := json.Unmarshal(meW.Body.Bytes(), &meResp); err != nil {
 		t.Fatalf("parse me response: %v", err)
 	}
 	if !meResp.Authenticated || meResp.User.Phone != "13800138000" {
 		t.Fatalf("expected authenticated user 13800138000, got %+v", meResp)
+	}
+	if meResp.Membership.Status != "none" || meResp.Membership.IsVIP || meResp.Membership.PlanCode != "" || meResp.Membership.ExpiresAt != nil {
+		t.Fatalf("expected default non-member status, got %+v", meResp.Membership)
 	}
 
 	logoutReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/logout", nil)

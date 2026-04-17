@@ -1,10 +1,12 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"astrolabe/internal/auth"
 	"astrolabe/internal/astrology"
@@ -17,6 +19,10 @@ type Handler struct {
 	reports storage.ReportStore
 	auth   *auth.Service
 	mux    *http.ServeMux
+}
+
+type membershipReader interface {
+	GetMembershipByUserID(ctx context.Context, userID string) (storage.Membership, error)
 }
 
 const sessionCookieName = "astrolabe_session"
@@ -299,12 +305,33 @@ func (h *Handler) handleCurrentUser(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "failed to load current user")
 		return
 	}
+	membershipPayload := map[string]any{
+		"status":     "none",
+		"plan_code":  "",
+		"is_vip":     false,
+		"expires_at": nil,
+	}
+	if reader, ok := h.reports.(membershipReader); ok {
+		membership, err := reader.GetMembershipByUserID(r.Context(), user.ID)
+		if err == nil {
+			membershipPayload["status"] = membership.Status
+			membershipPayload["plan_code"] = membership.PlanCode
+			membershipPayload["is_vip"] = membership.Status == "active"
+			if membership.ExpiresAt != nil {
+				membershipPayload["expires_at"] = membership.ExpiresAt.UTC().Format(time.RFC3339Nano)
+			}
+		} else if !errors.Is(err, storage.ErrMembershipNotFound) {
+			writeError(w, http.StatusInternalServerError, "failed to load membership status")
+			return
+		}
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"authenticated": true,
 		"user": map[string]any{
 			"id":    user.ID,
 			"phone": user.Phone,
 		},
+		"membership": membershipPayload,
 	})
 }
 

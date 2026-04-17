@@ -13,6 +13,7 @@ import (
 var ErrReportNotFound = errors.New("report not found")
 var ErrAuthSessionNotFound = errors.New("auth session not found")
 var ErrUserNotFound = errors.New("user not found")
+var ErrMembershipNotFound = errors.New("membership not found")
 
 type Report struct {
 	ID        string
@@ -44,6 +45,26 @@ type AuthSession struct {
 	CreatedAt time.Time
 }
 
+type Membership struct {
+	UserID    string
+	PlanCode  string
+	Status    string
+	StartedAt time.Time
+	ExpiresAt *time.Time
+	UpdatedAt time.Time
+}
+
+type PaymentOrder struct {
+	ID        string
+	UserID    string
+	Provider  string
+	PlanCode  string
+	AmountCNY int64
+	Status    string
+	CreatedAt time.Time
+	PaidAt    *time.Time
+}
+
 type ReportStore interface {
 	SaveReport(ctx context.Context, report Report) error
 	GetReport(ctx context.Context, id string, sessionID string) (Report, error)
@@ -58,6 +79,14 @@ type AuthStore interface {
 	CreateAuthSession(ctx context.Context, userID string, expiresAt time.Time) (AuthSession, error)
 	GetUserByAuthSession(ctx context.Context, sessionID string, now time.Time) (User, error)
 	DeleteAuthSession(ctx context.Context, sessionID string) error
+	GetMembershipByUserID(ctx context.Context, userID string) (Membership, error)
+}
+
+type BillingStore interface {
+	UpsertMembership(ctx context.Context, membership Membership) error
+	GetMembershipByUserID(ctx context.Context, userID string) (Membership, error)
+	SavePaymentOrder(ctx context.Context, order PaymentOrder) error
+	ListPaymentOrdersByUserID(ctx context.Context, userID string, limit int) ([]PaymentOrder, error)
 }
 
 func NewReportID() string {

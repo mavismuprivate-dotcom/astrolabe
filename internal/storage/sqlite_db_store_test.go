@@ -224,3 +224,71 @@ func TestSQLiteStore_AuthCodeAndSessionFlow(t *testing.T) {
 		t.Fatalf("expected ErrAuthSessionNotFound after delete, got %v", err)
 	}
 }
+
+func TestSQLiteStore_MembershipAndPaymentOrders(t *testing.T) {
+	t.Parallel()
+
+	dbPath := filepath.Join(t.TempDir(), "billing.db")
+	store, err := NewSQLiteStore(dbPath)
+	if err != nil {
+		t.Fatalf("NewSQLiteStore returned error: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = store.Close()
+	})
+
+	ctx := context.Background()
+	user, err := store.GetOrCreateUserByPhone(ctx, "13800138001")
+	if err != nil {
+		t.Fatalf("GetOrCreateUserByPhone returned error: %v", err)
+	}
+
+	expiresAt := time.Date(2026, 7, 17, 9, 0, 0, 0, time.UTC)
+	if err := store.UpsertMembership(ctx, Membership{
+		UserID:      user.ID,
+		PlanCode:    "vip_quarterly",
+		Status:      "active",
+		StartedAt:   time.Date(2026, 4, 17, 9, 0, 0, 0, time.UTC),
+		ExpiresAt:   &expiresAt,
+		UpdatedAt:   time.Date(2026, 4, 17, 9, 0, 0, 0, time.UTC),
+	}); err != nil {
+		t.Fatalf("UpsertMembership returned error: %v", err)
+	}
+
+	membership, err := store.GetMembershipByUserID(ctx, user.ID)
+	if err != nil {
+		t.Fatalf("GetMembershipByUserID returned error: %v", err)
+	}
+	if membership.PlanCode != "vip_quarterly" || membership.Status != "active" {
+		t.Fatalf("unexpected membership %+v", membership)
+	}
+	if membership.ExpiresAt == nil || !membership.ExpiresAt.Equal(expiresAt) {
+		t.Fatalf("expected membership expiry %v, got %+v", expiresAt, membership.ExpiresAt)
+	}
+
+	paidAt := time.Date(2026, 4, 17, 9, 10, 0, 0, time.UTC)
+	err = store.SavePaymentOrder(ctx, PaymentOrder{
+		ID:         "ord_test_001",
+		UserID:     user.ID,
+		Provider:   "wechatpay",
+		PlanCode:   "vip_quarterly",
+		AmountCNY:  68,
+		Status:     "paid",
+		CreatedAt:  time.Date(2026, 4, 17, 9, 5, 0, 0, time.UTC),
+		PaidAt:     &paidAt,
+	})
+	if err != nil {
+		t.Fatalf("SavePaymentOrder returned error: %v", err)
+	}
+
+	orders, err := store.ListPaymentOrdersByUserID(ctx, user.ID, 10)
+	if err != nil {
+		t.Fatalf("ListPaymentOrdersByUserID returned error: %v", err)
+	}
+	if len(orders) != 1 {
+		t.Fatalf("expected 1 order, got %d", len(orders))
+	}
+	if orders[0].Provider != "wechatpay" || orders[0].PlanCode != "vip_quarterly" || orders[0].Status != "paid" {
+		t.Fatalf("unexpected order %+v", orders[0])
+	}
+}

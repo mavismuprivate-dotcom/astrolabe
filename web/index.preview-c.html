@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
@@ -1212,6 +1212,108 @@
       border-bottom: none;
     }
 
+    .member-grid {
+      display: grid;
+      grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+      gap: 18px;
+    }
+
+    .member-summary-card,
+    .member-orders-card {
+      display: grid;
+      gap: 18px;
+      align-content: start;
+    }
+
+    .member-summary-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .member-summary-row:last-of-type {
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    .member-summary-key {
+      color: rgba(255, 255, 255, 0.56);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .member-summary-value {
+      color: var(--text-primary);
+      font-weight: 600;
+      text-align: right;
+    }
+
+    .member-summary-note {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.66);
+      line-height: 1.7;
+    }
+
+    .member-orders-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .member-order-item {
+      display: grid;
+      gap: 10px;
+      padding: 16px 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .member-order-meta,
+    .member-order-foot {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .member-order-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .member-order-time,
+    .member-order-provider {
+      color: rgba(255, 255, 255, 0.54);
+      font-size: 12px;
+    }
+
+    .member-order-status {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 12px;
+    }
+
+    .member-order-status.is-paid {
+      border-color: rgba(255, 255, 255, 0.24);
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-primary);
+    }
+
+    .member-order-status.is-pending {
+      border-color: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
     .todo-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1269,6 +1371,10 @@
 
       .quality-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .member-grid {
+        grid-template-columns: 1fr;
       }
 
       .todo-grid {
@@ -1659,6 +1765,45 @@
         </div>
       </section>
 
+      <section id="member-section" class="section">
+        <div class="section-header">
+          <span class="section-kicker">Member</span>
+          <h2 class="section-title">会员中心</h2>
+          <p class="section-text">登录后查看你的会员身份、到期时间和最近订单。</p>
+        </div>
+
+        <div class="member-grid">
+          <section class="surface member-summary-card" id="member-summary-card">
+            <div class="member-summary-row">
+              <span class="member-summary-key">登录手机</span>
+              <strong class="member-summary-value" id="member-phone">未登录</strong>
+            </div>
+            <div class="member-summary-row">
+              <span class="member-summary-key">会员状态</span>
+              <strong class="member-summary-value" id="member-status">免费账户</strong>
+            </div>
+            <div class="member-summary-row">
+              <span class="member-summary-key">当前方案</span>
+              <strong class="member-summary-value" id="member-plan">-</strong>
+            </div>
+            <div class="member-summary-row">
+              <span class="member-summary-key">到期时间</span>
+              <strong class="member-summary-value" id="member-expiry">-</strong>
+            </div>
+            <p class="member-summary-note" id="member-note">登录后查看你的会员身份与订单记录。</p>
+          </section>
+
+          <section class="surface member-orders-card">
+            <div class="reports-header">
+              <h3>最近订单</h3>
+            </div>
+            <div class="member-orders-list" id="member-orders-list">
+              <div class="report-list-empty">登录后查看会员订单。</div>
+            </div>
+          </section>
+        </div>
+      </section>
+
       <section id="todo-section" class="section">
         <div class="section-header">
           <span class="section-kicker">Roadmap</span>
@@ -1710,9 +1855,21 @@
     const logoutButton = document.querySelector('#logout-button');
     const authStatusEl = document.querySelector('#auth-status');
     const authCloseButton = document.querySelector('#auth-close-button');
+    const memberSummaryCard = document.querySelector('#member-summary-card');
+    const memberOrdersList = document.querySelector('#member-orders-list');
+    const memberPhoneEl = document.querySelector('#member-phone');
+    const memberStatusEl = document.querySelector('#member-status');
+    const memberPlanEl = document.querySelector('#member-plan');
+    const memberExpiryEl = document.querySelector('#member-expiry');
+    const memberNoteEl = document.querySelector('#member-note');
+    const downloadJSONButton = document.querySelector('#download-json');
+    const downloadPDFButton = document.querySelector('#download-pdf');
+    const copyReportButton = document.querySelector('#copy-report');
     let latest = null;
     let activeReportID = null;
     let currentUser = null;
+    let currentMembership = null;
+    let memberOrders = [];
     const reportQueryParam = 'report';
     const planetPlacementOrder = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'];
     const planetPlacementLabels = {
@@ -1823,6 +1980,102 @@
       authModal.setAttribute('aria-hidden', 'true');
     }
 
+    function defaultMembership() {
+      return {
+        status: 'none',
+        plan_code: '',
+        is_vip: false,
+        expires_at: null,
+      };
+    }
+
+    function formatMemberDate(value) {
+      if (!value) return '-';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return value;
+      return new Intl.DateTimeFormat('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(date);
+    }
+
+    function membershipPlanLabel(planCode) {
+      const labels = {
+        vip_monthly: '月卡 VIP',
+        vip_quarterly: '季卡 VIP',
+        vip_yearly: '年卡 VIP',
+      };
+      return labels[planCode] || '-';
+    }
+
+    function membershipStatusLabel(membership) {
+      if (!membership || membership.status === 'none') return '免费账户';
+      if (membership.status === 'active') return 'VIP 已开通';
+      if (membership.status === 'expired') return 'VIP 已过期';
+      return membership.status || '免费账户';
+    }
+
+    function renderMemberOrders(items = []) {
+      if (!memberOrdersList) return;
+      if (!currentUser) {
+        memberOrdersList.innerHTML = '<div class="report-list-empty">登录后查看会员订单。</div>';
+        return;
+      }
+      if (!Array.isArray(items) || items.length === 0) {
+        memberOrdersList.innerHTML = '<div class="report-list-empty">当前还没有会员订单。</div>';
+        return;
+      }
+      memberOrdersList.innerHTML = items.map((item) => {
+        const title = membershipPlanLabel(item.plan_code);
+        const statusClass = item.status === 'paid' ? 'is-paid' : 'is-pending';
+        const statusLabel = item.status === 'paid' ? '已支付' : item.status === 'pending' ? '待支付' : item.status;
+        const providerLabel = item.provider === 'alipay' ? '支付宝' : item.provider === 'wechat' ? '微信支付' : item.provider;
+        return `
+          <article class="member-order-item">
+            <div class="member-order-meta">
+              <strong class="member-order-title">${escapeHTML(title)}</strong>
+              <span class="member-order-status ${statusClass}">${escapeHTML(statusLabel)}</span>
+            </div>
+            <div class="member-order-foot">
+              <span class="member-order-provider">${escapeHTML(providerLabel)} / ¥${(Number(item.amount_cny || 0) / 100).toFixed(2)}</span>
+              <span class="member-order-time">${formatReportDate(item.created_at)}</span>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function renderMemberCenter() {
+      if (!memberSummaryCard) return;
+      if (!currentUser) {
+        memberPhoneEl.textContent = '未登录';
+        memberStatusEl.textContent = '免费账户';
+        memberPlanEl.textContent = '-';
+        memberExpiryEl.textContent = '-';
+        memberNoteEl.textContent = '登录后查看你的会员身份与订单记录。';
+        renderMemberOrders([]);
+        return;
+      }
+      const membership = currentMembership || defaultMembership();
+      memberPhoneEl.textContent = currentUser.phone || '-';
+      memberStatusEl.textContent = membershipStatusLabel(membership);
+      memberPlanEl.textContent = membershipPlanLabel(membership.plan_code);
+      memberExpiryEl.textContent = formatMemberDate(membership.expires_at);
+      memberNoteEl.textContent = membership.is_vip
+        ? '当前账号已开通 VIP，可使用导出类会员权益。'
+        : '当前账号为免费账户，导出类权益需开通 VIP。';
+      renderMemberOrders(memberOrders);
+    }
+
+    function syncVipActions() {
+      const canExport = Boolean(currentUser && currentMembership && currentMembership.is_vip && latest && latest.report_id);
+      [downloadJSONButton, downloadPDFButton, copyReportButton].forEach((button) => {
+        if (!button) return;
+        button.disabled = !canExport;
+      });
+    }
+
     async function loadCurrentUser() {
       const res = await fetch('/api/v1/me');
       const data = await res.json();
@@ -1830,8 +2083,27 @@
         throw new Error(data.error || '加载登录状态失败');
       }
       currentUser = data.authenticated ? data.user : null;
+      currentMembership = data.authenticated ? (data.membership || defaultMembership()) : defaultMembership();
       syncAuthUI();
+      renderMemberCenter();
+      syncVipActions();
       return currentUser;
+    }
+
+    async function loadBillingOrders() {
+      if (!currentUser) {
+        memberOrders = [];
+        renderMemberCenter();
+        return memberOrders;
+      }
+      const res = await fetch('/api/v1/billing/orders');
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || '加载会员订单失败');
+      }
+      memberOrders = data.items || [];
+      renderMemberCenter();
+      return memberOrders;
     }
 
     async function requestLoginCode() {
@@ -1861,7 +2133,8 @@
         throw new Error(data.error || '登录失败');
       }
       currentUser = data.user || null;
-      syncAuthUI();
+      await loadCurrentUser();
+      await loadBillingOrders();
       closeAuthModal();
       setFeedback('登录成功，会员身份体系已绑定', 'success');
     }
@@ -1873,7 +2146,11 @@
         throw new Error(data.error || '退出登录失败');
       }
       currentUser = null;
+      currentMembership = defaultMembership();
+      memberOrders = [];
       syncAuthUI();
+      renderMemberCenter();
+      syncVipActions();
       setFeedback('已退出登录', 'success');
     }
 
@@ -2253,6 +2530,7 @@
       document.querySelector('#card-action').textContent = resp.reading.action || '-';
       document.querySelector('#card-focus').textContent = resp.reading.focus || '-';
       renderEvidence(resp.reading.evidence || []);
+      syncVipActions();
 
       const quality = resp.reading.quality || {};
       document.querySelector('#metric-char-count').textContent = Number.isFinite(quality.char_count) ? `${quality.char_count}` : '-';
@@ -2368,36 +2646,69 @@
       if (latest) drawChart(latest.chart);
     });
 
-    document.querySelector('#download-json').addEventListener('click', () => {
-      if (!latest) return;
-      const blob = new Blob([JSON.stringify(latest, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
+    async function downloadProtectedExport(url, filename) {
+      const res = await fetch(url);
+      if (!res.ok) {
+        let message = '导出失败';
+        try {
+          const data = await res.json();
+          message = data.error || message;
+        } catch (_) {}
+        throw new Error(message);
+      }
+      const blob = await res.blob();
+      const objectURL = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = 'natal-chart.json';
+      a.href = objectURL;
+      a.download = filename;
       a.click();
-      URL.revokeObjectURL(url);
-    });
+      URL.revokeObjectURL(objectURL);
+    }
 
-    document.querySelector('#download-pdf').addEventListener('click', () => {
+    document.querySelector('#download-json').addEventListener('click', async () => {
       if (!latest || !latest.report_id) {
         setFeedback('请先生成报告或从历史记录中加载一份报告');
         return;
       }
+      try {
+        await downloadProtectedExport(`/api/v1/reports/${encodeURIComponent(latest.report_id)}/json`, 'natal-chart.json');
+      } catch (err) {
+        setFeedback(err.message || '导出失败');
+      }
+    });
 
-      window.location.href = `/api/v1/reports/${encodeURIComponent(latest.report_id)}/pdf`;
+    document.querySelector('#download-pdf').addEventListener('click', async () => {
+      if (!latest || !latest.report_id) {
+        setFeedback('请先生成报告或从历史记录中加载一份报告');
+        return;
+      }
+      try {
+        await downloadProtectedExport(`/api/v1/reports/${encodeURIComponent(latest.report_id)}/pdf`, 'natal-chart.pdf');
+      } catch (err) {
+        setFeedback(err.message || '导出失败');
+      }
     });
 
     document.querySelector('#copy-report').addEventListener('click', async () => {
-      if (!latest) return;
+      if (!latest || !latest.report_id) return;
       try {
-        await navigator.clipboard.writeText(latest.reading.text_report || '');
+        const res = await fetch(`/api/v1/reports/${encodeURIComponent(latest.report_id)}/text`);
+        if (!res.ok) {
+          let message = '复制失败';
+          try {
+            const data = await res.json();
+            message = data.error || message;
+          } catch (_) {}
+          throw new Error(message);
+        }
+        const text = await res.text();
+        await navigator.clipboard.writeText(text || '');
         setFeedback('文本报告已复制', 'success');
         setTimeout(() => {
           setFeedback('');
         }, 1200);
-      } catch (_) {
-        setFeedback('复制失败');
+      } catch (err) {
+        setFeedback(err.message || '复制失败');
       }
     });
 
@@ -2456,10 +2767,35 @@
 
     async function initPage() {
       bindGlowTracking();
+      currentMembership = defaultMembership();
       syncAuthUI();
+      renderMemberCenter();
+      syncVipActions();
       try {
         await loadCurrentUser();
+        if (currentUser) {
+          await loadBillingOrders();
+        }
       } catch (_) {
+        currentUser = null;
+        currentMembership = defaultMembership();
+        memberOrders = [];
+        syncAuthUI();
+        renderMemberCenter();
+        syncVipActions();
+      }
+      try {
+        await fetchRecentReports();
+      } catch (_) {
+        renderRecentReports([]);
+      }
+
+      try {
+        await loadReportFromQuery();
+      } catch (err) {
+        setFeedback(err.message || '加载报告失败');
+      }
+    } catch (_) {
         currentUser = null;
         syncAuthUI();
       }
@@ -2480,3 +2816,4 @@
   </script>
 </body>
 </html>
+

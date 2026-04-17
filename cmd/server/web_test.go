@@ -283,3 +283,28 @@ func TestIndexPageIncludesAuthEntryAndClientFlow(t *testing.T) {
 		`fetch('/api/v1/auth/logout'`,
 	)
 }
+
+func TestMemberCenterStructureExistsInBothPages(t *testing.T) {
+	for _, name := range []string{"index.html", "index.preview-c.html"} {
+		html := mustReadPage(t, name)
+
+		requireMarkers(t, html,
+			`id="member-section"`,
+			`会员中心`,
+			`id="member-summary-card"`,
+			`id="member-orders-list"`,
+			`id="member-phone"`,
+			`id="member-status"`,
+			`id="member-plan"`,
+			`id="member-expiry"`,
+			`const memberSummaryCard = document.querySelector('#member-summary-card');`,
+			`const memberOrdersList = document.querySelector('#member-orders-list');`,
+			`async function loadBillingOrders() {`,
+			`function renderMemberCenter() {`,
+			`function syncVipActions() {`,
+			`/api/v1/billing/orders`,
+			`/api/v1/reports/${encodeURIComponent(latest.report_id)}/json`,
+			`/api/v1/reports/${encodeURIComponent(latest.report_id)}/text`,
+		)
+	}
+}

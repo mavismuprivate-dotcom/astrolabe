@@ -219,6 +219,140 @@ func (s *SQLiteStore) ListReports(ctx context.Context, sessionID string, limit i
 	return items, rows.Err()
 }
 
+func (s *SQLiteStore) GetOrCreateUserByPhone(ctx context.Context, phone string) (User, error) {
+	now := time.Now().UTC()
+	user := User{
+		ID:        NewUserID(),
+		Phone:     phone,
+		CreatedAt: now,
+	}
+
+	if _, err := s.db.ExecContext(
+		ctx,
+		`INSERT INTO users (id, phone, created_at) VALUES (?, ?, ?)
+		 ON CONFLICT(phone) DO NOTHING`,
+		user.ID,
+		user.Phone,
+		user.CreatedAt.Format(time.RFC3339Nano),
+	); err != nil {
+		return User{}, err
+	}
+
+	var createdAtRaw string
+	err := s.db.QueryRowContext(
+		ctx,
+		`SELECT id, phone, created_at FROM users WHERE phone = ?`,
+		phone,
+	).Scan(&user.ID, &user.Phone, &createdAtRaw)
+	if errors.Is(err, sql.ErrNoRows) {
+		return User{}, ErrUserNotFound
+	}
+	if err != nil {
+		return User{}, err
+	}
+	user.CreatedAt, err = time.Parse(time.RFC3339Nano, createdAtRaw)
+	if err != nil {
+		return User{}, err
+	}
+	return user, nil
+}
+
+func (s *SQLiteStore) SaveLoginCode(ctx context.Context, phone string, codeHash string, expiresAt time.Time) error {
+	_, err := s.db.ExecContext(
+		ctx,
+		`INSERT INTO login_codes (phone, code_hash, expires_at, consumed_at, created_at)
+		 VALUES (?, ?, ?, NULL, ?)
+		 ON CONFLICT(phone) DO UPDATE SET
+		   code_hash=excluded.code_hash,
+		   expires_at=excluded.expires_at,
+		   consumed_at=NULL,
+		   created_at=excluded.created_at`,
+		phone,
+		codeHash,
+		expiresAt.UTC().Format(time.RFC3339Nano),
+		time.Now().UTC().Format(time.RFC3339Nano),
+	)
+	return err
+}
+
+func (s *SQLiteStore) ConsumeLoginCode(ctx context.Context, phone string, codeHash string, now time.Time) (bool, error) {
+	result, err := s.db.ExecContext(
+		ctx,
+		`UPDATE login_codes
+		 SET consumed_at = ?
+		 WHERE phone = ?
+		   AND code_hash = ?
+		   AND consumed_at IS NULL
+		   AND datetime(expires_at) >= datetime(?)`,
+		now.UTC().Format(time.RFC3339Nano),
+		phone,
+		codeHash,
+		now.UTC().Format(time.RFC3339Nano),
+	)
+	if err != nil {
+		return false, err
+	}
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return false, err
+	}
+	return affected > 0, nil
+}
+
+func (s *SQLiteStore) CreateAuthSession(ctx context.Context, userID string, expiresAt time.Time) (AuthSession, error) {
+	session := AuthSession{
+		ID:        NewAuthSessionID(),
+		UserID:    userID,
+		ExpiresAt: expiresAt.UTC(),
+		CreatedAt: time.Now().UTC(),
+	}
+	_, err := s.db.ExecContext(
+		ctx,
+		`INSERT INTO auth_sessions (id, user_id, expires_at, created_at) VALUES (?, ?, ?, ?)`,
+		session.ID,
+		session.UserID,
+		session.ExpiresAt.Format(time.RFC3339Nano),
+		session.CreatedAt.Format(time.RFC3339Nano),
+	)
+	if err != nil {
+		return AuthSession{}, err
+	}
+	return session, nil
+}
+
+func (s *SQLiteStore) GetUserByAuthSession(ctx context.Context, sessionID string, now time.Time) (User, error) {
+	var (
+		user         User
+		createdAtRaw string
+	)
+	err := s.db.QueryRowContext(
+		ctx,
+		`SELECT users.id, users.phone, users.created_at
+		 FROM auth_sessions
+		 INNER JOIN users ON users.id = auth_sessions.user_id
+		 WHERE auth_sessions.id = ?
+		   AND datetime(auth_sessions.expires_at) >= datetime(?)`,
+		sessionID,
+		now.UTC().Format(time.RFC3339Nano),
+	).Scan(&user.ID, &user.Phone, &createdAtRaw)
+	if errors.Is(err, sql.ErrNoRows) {
+		return User{}, ErrAuthSessionNotFound
+	}
+	if err != nil {
+		return User{}, err
+	}
+	user.CreatedAt, err = time.Parse(time.RFC3339Nano, createdAtRaw)
+	if err != nil {
+		return User{}, err
+	}
+	return user, nil
+}
+
+func (s *SQLiteStore) DeleteAuthSession(ctx context.Context, sessionID string) error {
+	_, err := s.db.ExecContext(ctx, `DELETE FROM auth_sessions WHERE id = ?`, sessionID)
+	return err
+}
+
 func (s *SQLiteStore) Close() error {
 	if s == nil || s.db == nil {
 		return nil

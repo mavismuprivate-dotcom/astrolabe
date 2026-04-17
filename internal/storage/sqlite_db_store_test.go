@@ -158,3 +158,69 @@ func TestSQLiteStore_RecordsSchemaVersion(t *testing.T) {
 		t.Fatalf("expected schema version >= 1, got %d", version)
 	}
 }
+
+func TestSQLiteStore_AuthCodeAndSessionFlow(t *testing.T) {
+	t.Parallel()
+
+	dbPath := filepath.Join(t.TempDir(), "auth.db")
+	store, err := NewSQLiteStore(dbPath)
+	if err != nil {
+		t.Fatalf("NewSQLiteStore returned error: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = store.Close()
+	})
+
+	ctx := context.Background()
+	user, err := store.GetOrCreateUserByPhone(ctx, "13800138000")
+	if err != nil {
+		t.Fatalf("GetOrCreateUserByPhone returned error: %v", err)
+	}
+	if user.Phone != "13800138000" {
+		t.Fatalf("expected phone 13800138000, got %s", user.Phone)
+	}
+
+	expiresAt := time.Date(2026, 4, 17, 9, 10, 0, 0, time.UTC)
+	if err := store.SaveLoginCode(ctx, user.Phone, "hash_123456", expiresAt); err != nil {
+		t.Fatalf("SaveLoginCode returned error: %v", err)
+	}
+
+	consumed, err := store.ConsumeLoginCode(ctx, user.Phone, "hash_123456", time.Date(2026, 4, 17, 9, 5, 0, 0, time.UTC))
+	if err != nil {
+		t.Fatalf("ConsumeLoginCode returned error: %v", err)
+	}
+	if !consumed {
+		t.Fatalf("expected login code to be consumed")
+	}
+
+	consumedAgain, err := store.ConsumeLoginCode(ctx, user.Phone, "hash_123456", time.Date(2026, 4, 17, 9, 6, 0, 0, time.UTC))
+	if err != nil {
+		t.Fatalf("ConsumeLoginCode second call returned error: %v", err)
+	}
+	if consumedAgain {
+		t.Fatalf("expected consumed login code to be invalid on second use")
+	}
+
+	session, err := store.CreateAuthSession(ctx, user.ID, time.Date(2026, 5, 17, 9, 0, 0, 0, time.UTC))
+	if err != nil {
+		t.Fatalf("CreateAuthSession returned error: %v", err)
+	}
+	if session.ID == "" {
+		t.Fatalf("expected auth session ID")
+	}
+
+	resolvedUser, err := store.GetUserByAuthSession(ctx, session.ID, time.Date(2026, 4, 17, 9, 1, 0, 0, time.UTC))
+	if err != nil {
+		t.Fatalf("GetUserByAuthSession returned error: %v", err)
+	}
+	if resolvedUser.Phone != user.Phone {
+		t.Fatalf("expected resolved phone %s, got %s", user.Phone, resolvedUser.Phone)
+	}
+
+	if err := store.DeleteAuthSession(ctx, session.ID); err != nil {
+		t.Fatalf("DeleteAuthSession returned error: %v", err)
+	}
+	if _, err := store.GetUserByAuthSession(ctx, session.ID, time.Date(2026, 4, 17, 9, 2, 0, 0, time.UTC)); !errors.Is(err, ErrAuthSessionNotFound) {
+		t.Fatalf("expected ErrAuthSessionNotFound after delete, got %v", err)
+	}
+}

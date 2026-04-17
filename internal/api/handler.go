@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	"astrolabe/internal/auth"
 	"astrolabe/internal/astrology"
 	reportpdf "astrolabe/internal/pdf"
 	"astrolabe/internal/storage"
@@ -14,20 +15,26 @@ import (
 type Handler struct {
 	svc    *astrology.Service
 	reports storage.ReportStore
+	auth   *auth.Service
 	mux    *http.ServeMux
 }
 
 const sessionCookieName = "astrolabe_session"
+const authCookieName = "astrolabe_auth"
 
 func NewHandler(svc *astrology.Service) *Handler {
-	return NewHandlerWithStore(svc, nil)
+	return NewHandlerWithDependencies(svc, nil, nil)
 }
 
 func NewHandlerWithStore(svc *astrology.Service, reports storage.ReportStore) *Handler {
+	return NewHandlerWithDependencies(svc, reports, nil)
+}
+
+func NewHandlerWithDependencies(svc *astrology.Service, reports storage.ReportStore, authSvc *auth.Service) *Handler {
 	if svc == nil {
 		svc = astrology.NewService(astrology.NewCityResolver())
 	}
-	h := &Handler{svc: svc, reports: reports, mux: http.NewServeMux()}
+	h := &Handler{svc: svc, reports: reports, auth: authSvc, mux: http.NewServeMux()}
 	h.routes()
 	return h
 }
@@ -35,6 +42,10 @@ func NewHandlerWithStore(svc *astrology.Service, reports storage.ReportStore) *H
 func (h *Handler) routes() {
 	h.mux.HandleFunc("/healthz", h.handleHealthz)
 	h.mux.HandleFunc("/api/v1/chart/natal", h.handleNatalChart)
+	h.mux.HandleFunc("/api/v1/auth/request-code", h.handleAuthRequestCode)
+	h.mux.HandleFunc("/api/v1/auth/verify-code", h.handleAuthVerifyCode)
+	h.mux.HandleFunc("/api/v1/auth/logout", h.handleAuthLogout)
+	h.mux.HandleFunc("/api/v1/me", h.handleCurrentUser)
 	h.mux.HandleFunc("/api/v1/reports", h.handleListReports)
 	h.mux.HandleFunc("/api/v1/reports/", h.handleReportRoutes)
 }
@@ -182,6 +193,140 @@ func (h *Handler) handleListReports(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{"items": items})
+}
+
+func (h *Handler) handleAuthRequestCode(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
+	if h.auth == nil {
+		writeError(w, http.StatusNotImplemented, "auth unavailable")
+		return
+	}
+	if !strings.Contains(r.Header.Get("Content-Type"), "application/json") {
+		writeError(w, http.StatusBadRequest, "content-type must be application/json")
+		return
+	}
+
+	var req struct {
+		Phone string `json:"phone"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid JSON body")
+		return
+	}
+	if err := h.auth.RequestCode(r.Context(), req.Phone); err != nil {
+		status := http.StatusBadRequest
+		if errors.Is(err, errInternal) {
+			status = http.StatusInternalServerError
+		}
+		writeError(w, status, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
+}
+
+func (h *Handler) handleAuthVerifyCode(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
+	if h.auth == nil {
+		writeError(w, http.StatusNotImplemented, "auth unavailable")
+		return
+	}
+	if !strings.Contains(r.Header.Get("Content-Type"), "application/json") {
+		writeError(w, http.StatusBadRequest, "content-type must be application/json")
+		return
+	}
+
+	var req struct {
+		Phone string `json:"phone"`
+		Code  string `json:"code"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid JSON body")
+		return
+	}
+	user, session, err := h.auth.VerifyCode(r.Context(), req.Phone, req.Code)
+	if err != nil {
+		status := http.StatusBadRequest
+		if errors.Is(err, errInternal) {
+			status = http.StatusInternalServerError
+		}
+		writeError(w, status, err.Error())
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     authCookieName,
+		Value:    session.ID,
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   60 * 60 * 24 * 30,
+	})
+	writeJSON(w, http.StatusOK, map[string]any{
+		"authenticated": true,
+		"user": map[string]any{
+			"id":    user.ID,
+			"phone": user.Phone,
+		},
+	})
+}
+
+func (h *Handler) handleCurrentUser(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
+	if h.auth == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"authenticated": false})
+		return
+	}
+	cookie, err := r.Cookie(authCookieName)
+	if err != nil || strings.TrimSpace(cookie.Value) == "" {
+		writeJSON(w, http.StatusOK, map[string]any{"authenticated": false})
+		return
+	}
+	user, err := h.auth.CurrentUser(r.Context(), cookie.Value)
+	if errors.Is(err, storage.ErrAuthSessionNotFound) {
+		writeJSON(w, http.StatusOK, map[string]any{"authenticated": false})
+		return
+	}
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to load current user")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"authenticated": true,
+		"user": map[string]any{
+			"id":    user.ID,
+			"phone": user.Phone,
+		},
+	})
+}
+
+func (h *Handler) handleAuthLogout(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
+	if h.auth != nil {
+		if cookie, err := r.Cookie(authCookieName); err == nil && strings.TrimSpace(cookie.Value) != "" {
+			_ = h.auth.Logout(r.Context(), cookie.Value)
+		}
+	}
+	http.SetCookie(w, &http.Cookie{
+		Name:     authCookieName,
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   -1,
+	})
+	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
 }
 
 var errInternal = errors.New("internal")

@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"astrolabe/internal/auth"
 	"astrolabe/internal/api"
 	"astrolabe/internal/astrology"
 	"astrolabe/internal/storage"
@@ -28,14 +29,15 @@ func main() {
 		}
 	}()
 
-	apiHandler := api.NewHandlerWithStore(svc, reportStore)
+	logger := log.New(log.Writer(), "", log.LstdFlags)
+	authSvc := auth.NewService(reportStore, auth.LogCodeSender{Logger: logger}, nil, nil)
+	apiHandler := api.NewHandlerWithDependencies(svc, reportStore, authSvc)
 
 	mux := http.NewServeMux()
 	mux.Handle("/api/", apiHandler)
 	mux.Handle("/healthz", apiHandler)
 	mux.Handle("/", http.FileServer(http.Dir("web")))
 
-	logger := log.New(log.Writer(), "", log.LstdFlags)
 	addr := ":" + cfg.Port
 	log.Printf("astrolabe server listening on %s", addr)
 	if err := http.ListenAndServe(addr, withRuntimeMiddleware(logger, cfg.RateLimitPerMinute, mux)); err != nil {

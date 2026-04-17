@@ -264,3 +264,22 @@ func TestIndexPreviewCRefinesGeneratorReadingAndRoadmapCopy(t *testing.T) {
 		}
 	}
 }
+
+func TestIndexPageIncludesAuthEntryAndClientFlow(t *testing.T) {
+	html := mustReadPage(t, "index.html")
+
+	requireMarkers(t, html,
+		`id="auth-entry-button"`,
+		`id="auth-modal"`,
+		`id="auth-phone"`,
+		`id="auth-code"`,
+		`id="request-code-button"`,
+		`id="verify-code-button"`,
+		`id="logout-button"`,
+		`async function loadCurrentUser()`,
+		`fetch('/api/v1/me')`,
+		`fetch('/api/v1/auth/request-code'`,
+		`fetch('/api/v1/auth/verify-code'`,
+		`fetch('/api/v1/auth/logout'`,
+	)
+}

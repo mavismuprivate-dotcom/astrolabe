@@ -14,6 +14,7 @@ var ErrReportNotFound = errors.New("report not found")
 var ErrAuthSessionNotFound = errors.New("auth session not found")
 var ErrUserNotFound = errors.New("user not found")
 var ErrMembershipNotFound = errors.New("membership not found")
+var ErrPaymentOrderNotFound = errors.New("payment order not found")
 
 type Report struct {
 	ID        string
@@ -86,6 +87,7 @@ type BillingStore interface {
 	UpsertMembership(ctx context.Context, membership Membership) error
 	GetMembershipByUserID(ctx context.Context, userID string) (Membership, error)
 	SavePaymentOrder(ctx context.Context, order PaymentOrder) error
+	GetPaymentOrderByID(ctx context.Context, id string) (PaymentOrder, error)
 	ListPaymentOrdersByUserID(ctx context.Context, userID string, limit int) ([]PaymentOrder, error)
 }
 

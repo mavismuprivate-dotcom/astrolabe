@@ -62,6 +62,7 @@ func TestBillingCreateAndListOrders(t *testing.T) {
 		func() (string, error) { return "123456", nil },
 	)
 	h := NewHandlerWithDependencies(astrology.NewService(astrology.NewCityResolver()), store, authSvc)
+	h.now = func() time.Time { return time.Date(2026, 4, 17, 10, 0, 0, 0, time.UTC) }
 	authCookie := authenticateTestUser(t, h, "13800138002")
 
 	createBody, _ := json.Marshal(map[string]string{
@@ -136,6 +137,104 @@ func TestBillingCreateAndListOrders(t *testing.T) {
 	}
 	if listResp.Items[0].ID != createResp.Order.ID {
 		t.Fatalf("expected listed order ID %s, got %s", createResp.Order.ID, listResp.Items[0].ID)
+	}
+}
+
+func TestBillingMockPayActivatesMembership(t *testing.T) {
+	t.Parallel()
+
+	dbPath := filepath.Join(t.TempDir(), "billing.db")
+	store, err := storage.NewSQLiteStore(dbPath)
+	if err != nil {
+		t.Fatalf("NewSQLiteStore returned error: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = store.Close()
+	})
+
+	sender := &captureCodeSender{}
+	authSvc := auth.NewService(
+		store,
+		sender,
+		func() time.Time { return time.Date(2026, 4, 17, 10, 0, 0, 0, time.UTC) },
+		func() (string, error) { return "123456", nil },
+	)
+	h := NewHandlerWithDependencies(astrology.NewService(astrology.NewCityResolver()), store, authSvc)
+	h.now = func() time.Time { return time.Date(2026, 4, 17, 10, 0, 0, 0, time.UTC) }
+	authCookie := authenticateTestUser(t, h, "13800138003")
+
+	createBody, _ := json.Marshal(map[string]string{
+		"plan_code": "vip_monthly",
+		"provider":  "wechat",
+	})
+	createReq := httptest.NewRequest(http.MethodPost, "/api/v1/billing/orders", bytes.NewReader(createBody))
+	createReq.Header.Set("Content-Type", "application/json")
+	createReq.AddCookie(authCookie)
+	createW := httptest.NewRecorder()
+	h.ServeHTTP(createW, createReq)
+	if createW.Code != http.StatusCreated {
+		t.Fatalf("expected create order status 201, got %d, body=%s", createW.Code, createW.Body.String())
+	}
+
+	var createResp struct {
+		Order struct {
+			ID string `json:"id"`
+		} `json:"order"`
+	}
+	if err := json.Unmarshal(createW.Body.Bytes(), &createResp); err != nil {
+		t.Fatalf("parse create response: %v", err)
+	}
+
+	payReq := httptest.NewRequest(http.MethodPost, "/api/v1/billing/orders/"+createResp.Order.ID+"/mock-pay", nil)
+	payReq.AddCookie(authCookie)
+	payW := httptest.NewRecorder()
+	h.ServeHTTP(payW, payReq)
+	if payW.Code != http.StatusOK {
+		t.Fatalf("expected mock pay status 200, got %d, body=%s", payW.Code, payW.Body.String())
+	}
+
+	var payResp struct {
+		Order struct {
+			Status string `json:"status"`
+		} `json:"order"`
+		Membership struct {
+			Status    string  `json:"status"`
+			PlanCode  string  `json:"plan_code"`
+			IsVIP     bool    `json:"is_vip"`
+			ExpiresAt *string `json:"expires_at"`
+		} `json:"membership"`
+	}
+	if err := json.Unmarshal(payW.Body.Bytes(), &payResp); err != nil {
+		t.Fatalf("parse mock pay response: %v", err)
+	}
+	if payResp.Order.Status != "paid" {
+		t.Fatalf("expected paid order status, got %s", payResp.Order.Status)
+	}
+	if payResp.Membership.Status != "active" || payResp.Membership.PlanCode != "vip_monthly" || !payResp.Membership.IsVIP || payResp.Membership.ExpiresAt == nil {
+		t.Fatalf("unexpected membership payload after pay: %+v", payResp.Membership)
+	}
+
+	meReq := httptest.NewRequest(http.MethodGet, "/api/v1/me", nil)
+	meReq.AddCookie(authCookie)
+	meW := httptest.NewRecorder()
+	h.ServeHTTP(meW, meReq)
+	if meW.Code != http.StatusOK {
+		t.Fatalf("expected me status 200, got %d, body=%s", meW.Code, meW.Body.String())
+	}
+
+	var meResp struct {
+		Membership struct {
+			Status    string  `json:"status"`
+			PlanCode  string  `json:"plan_code"`
+			IsVIP     bool    `json:"is_vip"`
+			ExpiresAt *string `json:"expires_at"`
+		} `json:"membership"`
+	}
+	if err := json.Unmarshal(meW.Body.Bytes(), &meResp); err != nil {
+		t.Fatalf("parse me response: %v", err)
+	}
+	if meResp.Membership.Status != "active" || meResp.Membership.PlanCode != "vip_monthly" || !meResp.Membership.IsVIP || meResp.Membership.ExpiresAt == nil {
+		t.Fatalf("unexpected me membership payload: %+v", meResp.Membership)
 	}
 }
 

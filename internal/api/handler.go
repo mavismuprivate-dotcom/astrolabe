@@ -20,6 +20,7 @@ type Handler struct {
 	billing storage.BillingStore
 	auth    *auth.Service
 	mux     *http.ServeMux
+	now     func() time.Time
 }
 
 type membershipReader interface {
@@ -56,7 +57,7 @@ func NewHandlerWithDependencies(svc *astrology.Service, reports storage.ReportSt
 	if store, ok := reports.(storage.BillingStore); ok {
 		billingStore = store
 	}
-	h := &Handler{svc: svc, reports: reports, billing: billingStore, auth: authSvc, mux: http.NewServeMux()}
+	h := &Handler{svc: svc, reports: reports, billing: billingStore, auth: authSvc, mux: http.NewServeMux(), now: time.Now}
 	h.routes()
 	return h
 }
@@ -69,6 +70,7 @@ func (h *Handler) routes() {
 	h.mux.HandleFunc("/api/v1/auth/logout", h.handleAuthLogout)
 	h.mux.HandleFunc("/api/v1/me", h.handleCurrentUser)
 	h.mux.HandleFunc("/api/v1/billing/orders", h.handleBillingOrders)
+	h.mux.HandleFunc("/api/v1/billing/orders/", h.handleBillingOrderRoutes)
 	h.mux.HandleFunc("/api/v1/reports", h.handleListReports)
 	h.mux.HandleFunc("/api/v1/reports/", h.handleReportRoutes)
 }
@@ -384,6 +386,14 @@ func (h *Handler) handleBillingOrders(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (h *Handler) handleBillingOrderRoutes(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost && strings.HasSuffix(r.URL.Path, "/mock-pay") {
+		h.handleMockPayBillingOrder(w, r)
+		return
+	}
+	writeError(w, http.StatusNotFound, "billing order not found")
+}
+
 func (h *Handler) handleCreateBillingOrder(w http.ResponseWriter, r *http.Request) {
 	if h.billing == nil {
 		writeError(w, http.StatusNotImplemented, "billing unavailable")
@@ -424,7 +434,7 @@ func (h *Handler) handleCreateBillingOrder(w http.ResponseWriter, r *http.Reques
 		PlanCode:  plan.Code,
 		AmountCNY: plan.AmountCNY,
 		Status:    "pending",
-		CreatedAt: time.Now().UTC(),
+		CreatedAt: h.now().UTC(),
 	}
 	if err := h.billing.SavePaymentOrder(r.Context(), order); err != nil {
 		writeError(w, http.StatusInternalServerError, "failed to create payment order")
@@ -463,6 +473,128 @@ func (h *Handler) handleListBillingOrders(w http.ResponseWriter, r *http.Request
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"items": items})
+}
+
+func (h *Handler) handleMockPayBillingOrder(w http.ResponseWriter, r *http.Request) {
+	if h.billing == nil {
+		writeError(w, http.StatusNotImplemented, "billing unavailable")
+		return
+	}
+	user, ok := h.requireAuthenticatedUser(w, r)
+	if !ok {
+		return
+	}
+
+	orderID := strings.TrimPrefix(r.URL.Path, "/api/v1/billing/orders/")
+	orderID = strings.TrimSuffix(orderID, "/mock-pay")
+	orderID = strings.TrimSuffix(orderID, "/")
+	if orderID == "" || strings.Contains(orderID, "/") {
+		writeError(w, http.StatusNotFound, "payment order not found")
+		return
+	}
+
+	order, err := h.billing.GetPaymentOrderByID(r.Context(), orderID)
+	if errors.Is(err, storage.ErrPaymentOrderNotFound) {
+		writeError(w, http.StatusNotFound, "payment order not found")
+		return
+	}
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to load payment order")
+		return
+	}
+	if order.UserID != user.ID {
+		writeError(w, http.StatusNotFound, "payment order not found")
+		return
+	}
+
+	now := h.now().UTC()
+	if order.Status != "paid" {
+		order.Status = "paid"
+		order.PaidAt = &now
+		if err := h.billing.SavePaymentOrder(r.Context(), order); err != nil {
+			writeError(w, http.StatusInternalServerError, "failed to update payment order")
+			return
+		}
+		membership, err := h.activateMembershipForOrder(r.Context(), user.ID, order.PlanCode, now)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "failed to activate membership")
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{
+			"order":      order,
+			"membership": membershipResponse(membership),
+		})
+		return
+	}
+
+	membership, err := h.billing.GetMembershipByUserID(r.Context(), user.ID)
+	if err != nil && !errors.Is(err, storage.ErrMembershipNotFound) {
+		writeError(w, http.StatusInternalServerError, "failed to load membership status")
+		return
+	}
+	resp := map[string]any{"order": order}
+	if err == nil {
+		resp["membership"] = membershipResponse(membership)
+	}
+	writeJSON(w, http.StatusOK, resp)
+}
+
+func (h *Handler) activateMembershipForOrder(ctx context.Context, userID string, planCode string, now time.Time) (storage.Membership, error) {
+	expiresAt, ok := membershipExpiry(now, planCode)
+	if !ok {
+		return storage.Membership{}, errors.New("unsupported plan_code")
+	}
+	startAt := now
+	if current, err := h.billing.GetMembershipByUserID(ctx, userID); err == nil {
+		if current.Status == "active" && current.ExpiresAt != nil && current.ExpiresAt.After(now) {
+			startAt = *current.ExpiresAt
+			nextExpiry, ok := membershipExpiry(startAt, planCode)
+			if !ok {
+				return storage.Membership{}, errors.New("unsupported plan_code")
+			}
+			expiresAt = nextExpiry
+		}
+	} else if !errors.Is(err, storage.ErrMembershipNotFound) {
+		return storage.Membership{}, err
+	}
+	membership := storage.Membership{
+		UserID:    userID,
+		PlanCode:  planCode,
+		Status:    "active",
+		StartedAt: now,
+		ExpiresAt: &expiresAt,
+		UpdatedAt: now,
+	}
+	if err := h.billing.UpsertMembership(ctx, membership); err != nil {
+		return storage.Membership{}, err
+	}
+	return membership, nil
+}
+
+func membershipExpiry(start time.Time, planCode string) (time.Time, bool) {
+	switch planCode {
+	case "vip_monthly":
+		return start.Add(30 * 24 * time.Hour), true
+	case "vip_quarterly":
+		return start.Add(90 * 24 * time.Hour), true
+	case "vip_yearly":
+		return start.Add(365 * 24 * time.Hour), true
+	default:
+		return time.Time{}, false
+	}
+}
+
+func membershipResponse(membership storage.Membership) map[string]any {
+	resp := map[string]any{
+		"status":     membership.Status,
+		"plan_code":  membership.PlanCode,
+		"is_vip":     membership.Status == "active",
+		"expires_at": nil,
+	}
+	if membership.ExpiresAt != nil {
+		resp["expires_at"] = membership.ExpiresAt.UTC().Format(time.RFC3339Nano)
+	}
+	return resp
 }
 
 func (h *Handler) requireAuthenticatedUser(w http.ResponseWriter, r *http.Request) (storage.User, bool) {

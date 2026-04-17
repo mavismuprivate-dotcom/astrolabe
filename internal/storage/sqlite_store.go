@@ -452,6 +452,48 @@ func (s *SQLiteStore) SavePaymentOrder(ctx context.Context, order PaymentOrder) 
 	return err
 }
 
+func (s *SQLiteStore) GetPaymentOrderByID(ctx context.Context, id string) (PaymentOrder, error) {
+	var (
+		item         PaymentOrder
+		createdAtRaw string
+		paidAtRaw    sql.NullString
+	)
+	err := s.db.QueryRowContext(
+		ctx,
+		`SELECT id, user_id, provider, plan_code, amount_cny, status, created_at, paid_at
+		 FROM payment_orders
+		 WHERE id = ?`,
+		id,
+	).Scan(
+		&item.ID,
+		&item.UserID,
+		&item.Provider,
+		&item.PlanCode,
+		&item.AmountCNY,
+		&item.Status,
+		&createdAtRaw,
+		&paidAtRaw,
+	)
+	if errors.Is(err, sql.ErrNoRows) {
+		return PaymentOrder{}, ErrPaymentOrderNotFound
+	}
+	if err != nil {
+		return PaymentOrder{}, err
+	}
+	item.CreatedAt, err = time.Parse(time.RFC3339Nano, createdAtRaw)
+	if err != nil {
+		return PaymentOrder{}, err
+	}
+	if paidAtRaw.Valid && paidAtRaw.String != "" {
+		paidAt, err := time.Parse(time.RFC3339Nano, paidAtRaw.String)
+		if err != nil {
+			return PaymentOrder{}, err
+		}
+		item.PaidAt = &paidAt
+	}
+	return item, nil
+}
+
 func (s *SQLiteStore) ListPaymentOrdersByUserID(ctx context.Context, userID string, limit int) ([]PaymentOrder, error) {
 	if limit <= 0 {
 		limit = 20

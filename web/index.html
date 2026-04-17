@@ -1788,7 +1788,7 @@
         <div class="section-header">
           <span class="section-kicker">Member</span>
           <h2 class="section-title">会员中心</h2>
-          <p class="section-text">登录后查看你的会员身份、到期时间和最近订单。</p>
+          <p class="section-text">登录后查看你的会员身份、到期时间和最近订单。限时赠送 2 次个人周运解读，月运解读为 VIP 专享。</p>
         </div>
 
         <div class="member-grid">
@@ -1809,7 +1809,7 @@
               <span class="member-summary-key">到期时间</span>
               <strong class="member-summary-value" id="member-expiry">-</strong>
             </div>
-            <p class="member-summary-note" id="member-note">登录后查看你的会员身份与订单记录。</p>
+            <p class="member-summary-note" id="member-note">登录后查看你的会员身份、周运次数与订单记录。</p>
             <a class="action-button" id="open-vip-page" href="/vip.html">立即开通 VIP</a>
           </section>
 
@@ -1830,25 +1830,25 @@
           <h2 class="section-title">更多功能</h2>
           <div class="todo-header-meta">
             <span class="vip-badge vip-badge-roadmap">VIP会员专享</span>
-            <p class="section-text">更多功能均为会员能力，后续将逐步开放。</p>
+            <p class="section-text">解锁持续更新的个人周运与 VIP 专享月运解读。</p>
           </div>
         </div>
 
         <div class="todo-grid">
           <article class="surface todo-card todo-card-vip">
             <span class="todo-tag">VIP会员专享</span>
-            <h3>多语言切换</h3>
-            <p>未来将支持更灵活的多语言切换与输出体验。</p>
+            <h3>个人周运解读</h3>
+            <p>新用户可限时领取 2 次个人周运解读。</p>
           </article>
           <article class="surface todo-card todo-card-vip">
             <span class="todo-tag">VIP会员专享</span>
-            <h3>历史记录与导出</h3>
-            <p>后续会加入历史记录管理与更完整的报告导出能力。</p>
+            <h3>个人月运解读</h3>
+            <p>月运解读与深度专题将作为 VIP 专享能力开放。</p>
           </article>
           <article class="surface todo-card todo-card-vip">
             <span class="todo-tag">VIP会员专享</span>
-            <h3>流年与合盘</h3>
-            <p>未来会扩展到流年与合盘等更深入的占星场景。</p>
+            <h3>深度专题解读</h3>
+            <p>后续会围绕事业、关系与财富等主题扩展深度解读。</p>
           </article>
         </div>
       </section>
@@ -2082,7 +2082,7 @@
         memberStatusEl.textContent = '免费账户';
         memberPlanEl.textContent = '-';
         memberExpiryEl.textContent = '-';
-        memberNoteEl.textContent = '登录后查看你的会员身份与订单记录。';
+        memberNoteEl.textContent = '登录后查看你的会员身份、周运次数与订单记录。';
         renderMemberOrders([]);
         return;
       }
@@ -2092,8 +2092,8 @@
       memberPlanEl.textContent = membershipPlanLabel(membership.plan_code);
       memberExpiryEl.textContent = formatMemberDate(membership.expires_at);
       memberNoteEl.textContent = membership.is_vip
-        ? '当前账号已开通 VIP，可使用导出类会员权益。'
-        : '当前账号为免费账户，导出类权益需开通 VIP。';
+        ? '当前账号已开通 VIP，可使用完整解读、周运更新与月运专享权益。'
+        : '当前账号为免费账户，可领取 2 次限时周运，月运解读需开通 VIP。';
       renderMemberOrders(memberOrders);
     }
 

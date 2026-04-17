@@ -1,4 +1,4 @@
-package main
+﻿package main
 
 import (
 	"os"
@@ -220,7 +220,7 @@ func TestIndexPageRefinesGeneratorReadingAndRoadmapCopy(t *testing.T) {
 		`四大主题、依据链和质量指标会在这里集中展开。`,
 		`class="todo-header-meta"`,
 		`class="vip-badge vip-badge-roadmap"`,
-		`更多功能均为会员能力，后续将逐步开放。`,
+		`解锁持续更新的个人周运与 VIP 专享月运解读。`,
 		`class="surface todo-card todo-card-vip"`,
 	)
 
@@ -247,7 +247,7 @@ func TestIndexPreviewCRefinesGeneratorReadingAndRoadmapCopy(t *testing.T) {
 		`四大主题、依据链和质量指标会在这里集中展开。`,
 		`class="todo-header-meta"`,
 		`class="vip-badge vip-badge-roadmap"`,
-		`更多功能均为会员能力，后续将逐步开放。`,
+		`解锁持续更新的个人周运与 VIP 专享月运解读。`,
 		`class="surface todo-card todo-card-vip"`,
 	)
 
@@ -309,6 +309,23 @@ func TestMemberCenterStructureExistsInBothPages(t *testing.T) {
 	}
 }
 
+func TestMembershipCopyReflectsWeeklyAndMonthlyBoundary(t *testing.T) {
+	for _, name := range []string{"index.html", "index.preview-c.html"} {
+		html := mustReadPage(t, name)
+
+		requireMarkers(t, html,
+			`限时赠送 2 次个人周运解读，月运解读为 VIP 专享。`,
+			`当前账号已开通 VIP，可使用完整解读、周运更新与月运专享权益。`,
+			`当前账号为免费账户，可领取 2 次限时周运，月运解读需开通 VIP。`,
+			`个人周运解读`,
+			`个人月运解读`,
+			`新用户可限时领取 2 次个人周运解读。`,
+			`解锁持续更新的个人周运与 VIP 专享月运解读。`,
+			`月运解读与深度专题将作为 VIP 专享能力开放。`,
+		)
+	}
+}
+
 func TestLegalPagesAndFooterLinksExist(t *testing.T) {
 	for _, name := range []string{"index.html", "index.preview-c.html"} {
 		html := mustReadPage(t, name)
@@ -348,18 +365,19 @@ func TestVIPPageAndEntryLinksExist(t *testing.T) {
 	html := mustReadPage(t, "vip.html")
 	requireMarkers(t, html,
 		`VIP会员`,
-		`解锁完整报告导出与会员专享能力`,
+		`解锁完整本命解读、持续更新的个人周运，以及 VIP 专享的个人月运解读。`,
 		`月卡`,
 		`季卡`,
 		`年卡`,
 		`12.9`,
 		`29.9`,
 		`99`,
-		`使用会员导出权益`,
-		`下载 JSON 报告`,
-		`下载 PDF 报告`,
-		`复制完整文本报告`,
-		`后续会员专享功能优先开放`,
+		`VIP会员权益`,
+		`下载 JSON / PDF 报告并复制完整文本`,
+		`完整版本命解读`,
+		`个人周运持续更新`,
+		`个人月运解读 VIP 专享`,
+		`限时赠送 2 次个人周运解读`,
 		`id="vip-auth-entry-button"`,
 		`id="vip-auth-modal"`,
 		`id="vip-order-feedback"`,
@@ -371,5 +389,19 @@ func TestVIPPageAndEntryLinksExist(t *testing.T) {
 		`fetch('/api/v1/auth/verify-code'`,
 		`fetch('/api/v1/billing/orders'`,
 		"fetch(`/api/v1/billing/orders/${order.order.id}/mock-pay`",
+	)
+}
+
+func TestVIPPageReflectsWeeklyAndMonthlyBenefits(t *testing.T) {
+	html := mustReadPage(t, "vip.html")
+
+	requireMarkers(t, html,
+		`限时赠送 2 次个人周运解读`,
+		`完整版本命解读`,
+		`个人周运持续更新`,
+		`个人月运解读 VIP 专享`,
+		`完整历史记录与会员中心管理`,
+		`class="benefit-intro"`,
+		`class="benefit-highlight"`,
 	)
 }

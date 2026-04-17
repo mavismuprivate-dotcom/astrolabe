@@ -177,6 +177,24 @@
       padding: 0;
       list-style: none;
     }
+    .benefit-intro {
+      margin: 0 0 16px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+    .benefit-highlight {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      margin-top: 10px;
+      padding: 0 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(184,155,106,0.26);
+      background: rgba(184,155,106,0.08);
+      color: #ead7b4;
+      font-size: 13px;
+      letter-spacing: 0.04em;
+    }
     .benefit-item {
       display: flex;
       gap: 12px;
@@ -343,19 +361,22 @@
       <section class="surface hero-copy">
         <span class="hero-kicker">VIP Member</span>
         <h1 class="hero-title">VIP会员</h1>
-        <p class="hero-text">解锁完整报告导出与会员专享能力。当前为内测环境，点击套餐后会创建订单并自动走通模拟支付流程。</p>
+        <p class="hero-text">解锁完整本命解读、持续更新的个人周运，以及 VIP 专享的个人月运解读。当前为内测环境，点击套餐后会创建订单并自动走通模拟支付流程。</p>
       </section>
       <section class="surface hero-art" aria-hidden="true"></section>
     </section>
 
     <section class="grid">
       <section class="surface benefits">
-        <h2 class="section-title">使用会员导出权益</h2>
+        <h2 class="section-title">VIP会员权益</h2>
+        <p class="benefit-intro">免费版可限时领取 2 次个人周运解读。开通 VIP 后，周运持续更新，个人月运解读改为会员专享。</p>
+        <div class="benefit-highlight">限时赠送 2 次个人周运解读</div>
         <ul class="benefit-list">
-          <li class="benefit-item"><span class="benefit-dot"></span><span>下载 JSON 报告</span></li>
-          <li class="benefit-item"><span class="benefit-dot"></span><span>下载 PDF 报告</span></li>
-          <li class="benefit-item"><span class="benefit-dot"></span><span>复制完整文本报告</span></li>
-          <li class="benefit-item"><span class="benefit-dot"></span><span>会员中心查看会员状态与最近订单</span></li>
+          <li class="benefit-item"><span class="benefit-dot"></span><span>完整版本命解读</span></li>
+          <li class="benefit-item"><span class="benefit-dot"></span><span>个人周运持续更新</span></li>
+          <li class="benefit-item"><span class="benefit-dot"></span><span>个人月运解读 VIP 专享</span></li>
+          <li class="benefit-item"><span class="benefit-dot"></span><span>下载 JSON / PDF 报告并复制完整文本</span></li>
+          <li class="benefit-item"><span class="benefit-dot"></span><span>完整历史记录与会员中心管理</span></li>
           <li class="benefit-item"><span class="benefit-dot"></span><span>后续会员专享功能优先开放</span></li>
         </ul>
       </section>
@@ -376,7 +397,7 @@
                 <strong class="plan-name">月卡</strong>
               </div>
               <div class="plan-price"><strong>12.9</strong><span>元 / 30天</span></div>
-              <p class="plan-note">适合先体验会员导出权益和订单流程。</p>
+              <p class="plan-note">适合先体验完整本命解读、周运更新与会员导出权益。</p>
               <button class="plan-button" type="button" data-plan-code="vip_monthly" data-provider="alipay">开通月卡</button>
             </article>
             <article class="plan-card is-recommended">
@@ -385,7 +406,7 @@
                 <span class="plan-tag">推荐</span>
               </div>
               <div class="plan-price"><strong>29.9</strong><span>元 / 90天</span></div>
-              <p class="plan-note">当前主推方案，适合持续使用报告导出与会员权益。</p>
+              <p class="plan-note">当前主推方案，适合持续使用个人周运，并解锁 VIP 专享月运。</p>
               <button class="plan-button" type="button" data-plan-code="vip_quarterly" data-provider="alipay">开通季卡</button>
             </article>
             <article class="plan-card">
@@ -393,7 +414,7 @@
                 <strong class="plan-name">年卡</strong>
               </div>
               <div class="plan-price"><strong>99</strong><span>元 / 365天</span></div>
-              <p class="plan-note">适合长期使用，后续会员专享功能会继续叠加。</p>
+              <p class="plan-note">适合长期使用，月运解读与后续深度权益会持续叠加。</p>
               <button class="plan-button" type="button" data-plan-code="vip_yearly" data-provider="alipay">开通年卡</button>
             </article>
           </div>
